@@ -2,7 +2,6 @@ package com.mskwak.plant.plant_detail
 
 import android.content.res.Configuration
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.expandHorizontally
@@ -21,6 +20,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +55,7 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun PlantDetailScreen(
     viewModel: PlantDetailViewModel = hiltViewModel(),
-    navigate: (PlantDetailEffect.Navigation) -> Unit
+    navigate: (PlantDetailEffect.Navigation) -> Unit,
 ) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -74,10 +74,10 @@ fun PlantDetailScreen(
             onConfirm = {
                 taskToComplete = null
                 viewModel.setEvent(
-                    PlantDetailEvent.OnOneTimeTaskCompleteConfirmed(target.taskId, target.date)
+                    PlantDetailEvent.OnOneTimeTaskCompleteConfirmed(target.taskId, target.date),
                 )
             },
-            onDismiss = { taskToComplete = null }
+            onDismiss = { taskToComplete = null },
         )
     }
 
@@ -87,13 +87,13 @@ fun PlantDetailScreen(
                 taskIdToDelete = null
                 viewModel.setEvent(PlantDetailEvent.OnTaskDeleteConfirmed(taskId))
             },
-            onDismiss = { taskIdToDelete = null }
+            onDismiss = { taskIdToDelete = null },
         )
     }
 
     if (showExactAlarmPermissionDialog) {
         ExactAlarmPermissionDialog(
-            onDismiss = { showExactAlarmPermissionDialog = false }
+            onDismiss = { showExactAlarmPermissionDialog = false },
         )
     }
 
@@ -103,7 +103,7 @@ fun PlantDetailScreen(
                 viewModel.setEvent(PlantDetailEvent.OnDeleteConfirmClicked)
                 showDeleteDialog = false
             },
-            onDismiss = { showDeleteDialog = false }
+            onDismiss = { showDeleteDialog = false },
         )
     }
 
@@ -113,20 +113,26 @@ fun PlantDetailScreen(
                 showHarvestDialog = false
                 viewModel.setEvent(PlantDetailEvent.OnHarvestConfirmed(date))
             },
-            onDismiss = { showHarvestDialog = false }
+            onDismiss = { showHarvestDialog = false },
         )
     }
 
     Content(
         state = state,
-        onEvent = viewModel::setEvent
+        onEvent = viewModel::setEvent,
     )
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is PlantDetailEffect.Navigation -> navigate(effect)
-                is PlantDetailEffect.ShowSnackbar -> Toast.makeText(context, effect.message, Toast.LENGTH_LONG).show()
+                is PlantDetailEffect.Navigation -> {
+                    navigate(effect)
+                }
+
+                is PlantDetailEffect.ShowSnackbar -> {
+                    Toast.makeText(context, effect.message, Toast.LENGTH_LONG).show()
+                }
+
                 is PlantDetailEffect.ShowExactAlarmPermissionDialog -> {
                     showExactAlarmPermissionDialog = true
                 }
@@ -159,11 +165,11 @@ private fun TopBar(onEvent: (PlantDetailEvent) -> Unit) {
         title = {},
         navigationIcon = {
             IconButton(
-                onClick = { onEvent(PlantDetailEvent.OnBackClicked) }
+                onClick = { onEvent(PlantDetailEvent.OnBackClicked) },
             ) {
                 Icon(
                     imageVector = IconPack.ArrowBackBlack,
-                    contentDescription = stringResource(R.string.back)
+                    contentDescription = stringResource(R.string.back),
                 )
             }
         },
@@ -173,44 +179,44 @@ private fun TopBar(onEvent: (PlantDetailEvent) -> Unit) {
                     Icon(
                         imageVector = IconPack.MoreHorizBlack,
                         contentDescription = stringResource(R.string.menu),
-                        modifier = Modifier.rotate(90f)
+                        modifier = Modifier.rotate(90f),
                     )
                 }
                 AppDropDownMenu(
                     expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
+                    onDismissRequest = { showMenu = false },
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.edit)) },
                         onClick = {
                             showMenu = false
                             onEvent(PlantDetailEvent.OnEditPlantClicked)
-                        }
+                        },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.export)) },
                         onClick = {
                             showMenu = false
                             onEvent(PlantDetailEvent.OnExportClicked)
-                        }
+                        },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.delete)) },
                         onClick = {
                             showMenu = false
                             onEvent(PlantDetailEvent.OnDeletePlantClicked)
-                        }
+                        },
                     )
                 }
             }
-        }
+        },
     )
 }
 
 @Composable
 private fun Content(
     state: PlantDetailState,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     var wateringAnimationKey by remember { mutableIntStateOf(0) }
     var zoomImagePath by remember { mutableStateOf<String?>(null) }
@@ -221,15 +227,16 @@ private fun Content(
 
     Scaffold(
         topBar = { TopBar(onEvent = onEvent) },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(top = 4.dp, bottom = 30.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 4.dp, bottom = 30.dp),
         ) {
             Header(
                 imagePath = state.plantImagePath,
@@ -237,7 +244,7 @@ private fun Content(
                 isHarvested = state.isHarvested,
                 createdAt = state.createdAt,
                 harvestDate = state.harvestDate,
-                onImageClick = { state.plantImagePath?.let { zoomImagePath = it } }
+                onImageClick = { state.plantImagePath?.let { zoomImagePath = it } },
             )
 
             // 수확 전에만 물주기 정보 표시
@@ -250,7 +257,7 @@ private fun Content(
                     wateringAlarm = state.wateringAlarmTime,
                     isWateringActive = state.isWateringActive,
                     wateringAnimationKey = wateringAnimationKey,
-                    onEvent = onEvent
+                    onEvent = onEvent,
                 )
             }
 
@@ -267,7 +274,7 @@ private fun Content(
                         wateringAnimationKey = 0
                     }
                     onEvent(event)
-                }
+                },
             )
 
             // 수확 전에만 할일 카드와 추가 버튼 표시
@@ -293,7 +300,7 @@ private fun Content(
             DiarySection(
                 plantName = state.plantName,
                 diaryList = state.diaries,
-                onEvent = onEvent
+                onEvent = onEvent,
             )
 
             Spacer(Modifier.height(16.dp))
@@ -303,7 +310,7 @@ private fun Content(
                 HarvestSection(
                     isExpanded = state.isHarvestSectionExpanded,
                     memoInput = state.harvestMemoInput,
-                    onEvent = onEvent
+                    onEvent = onEvent,
                 )
             }
         }
@@ -314,26 +321,28 @@ private fun Content(
 private fun PlantImage(
     modifier: Modifier = Modifier,
     imagePath: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .then(if (imagePath != null) Modifier.clickableWithoutRipple(onClick = onClick) else Modifier)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(15.dp))
+                .then(if (imagePath != null) Modifier.clickableWithoutRipple(onClick = onClick) else Modifier),
     ) {
         if (imagePath == null) {
             Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow),
-                contentAlignment = Alignment.Center
+                modifier =
+                    modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow),
+                contentAlignment = Alignment.Center,
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_flower_pot),
                     contentDescription = null,
-                    modifier = modifier.size(130.dp)
+                    modifier = modifier.size(130.dp),
                 )
             }
         } else {
@@ -341,7 +350,7 @@ private fun PlantImage(
                 model = imagePath,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = modifier.fillMaxSize()
+                modifier = modifier.fillMaxSize(),
             )
         }
     }
@@ -355,7 +364,7 @@ private fun Header(
     isHarvested: Boolean,
     createdAt: LocalDate?,
     harvestDate: LocalDate?,
-    onImageClick: () -> Unit
+    onImageClick: () -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         PlantImage(imagePath = imagePath, onClick = onImageClick)
@@ -367,7 +376,7 @@ private fun Header(
                     text = plantName,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
                 if (isHarvested) {
                     Spacer(Modifier.width(8.dp))
@@ -380,13 +389,13 @@ private fun Header(
                 Text(
                     text = "${stringResource(R.string.plant_date)} :",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
                     text = createdAt.toDateString(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -396,13 +405,13 @@ private fun Header(
                     Text(
                         text = "${stringResource(R.string.harvest_date)} :",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = harvestDate.toDateString(),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -419,59 +428,62 @@ private fun WateringInfo(
     wateringAlarm: LocalTime?,
     isWateringActive: Boolean,
     wateringAnimationKey: Int,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                RoundedCornerShape(15.dp)
-            )
-            .padding(horizontal = 16.dp)
-            .padding(top = 20.dp, bottom = 16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                    RoundedCornerShape(15.dp),
+                ).padding(horizontal = 16.dp)
+                .padding(top = 20.dp, bottom = 16.dp),
     ) {
         val lottieComposition by rememberLottieComposition(
-            LottieCompositionSpec.RawRes(R.raw.lottie_water_loader)
+            LottieCompositionSpec.RawRes(R.raw.lottie_water_loader),
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(35.dp)
+                modifier = Modifier.size(35.dp),
             ) {
                 if (wateringAnimationKey > 0) {
                     key(wateringAnimationKey) {
                         LottieAnimation(
                             composition = lottieComposition,
                             iterations = 1,
-                            modifier = Modifier
-                                .size(35.dp)
-                                .scale(1.8f)
+                            modifier =
+                                Modifier
+                                    .size(35.dp)
+                                    .scale(1.8f),
                         )
                         Image(
                             imageVector = IconPack.WaterDropWhite,
                             contentDescription = null,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(26.dp),
                         )
                     }
                 } else {
                     Image(
-                        imageVector = when (wateringStatus) {
-                            WateringStatus.TODAY,
-                            WateringStatus.UPCOMING,
-                            WateringStatus.NO_PERIOD -> IconPack.WaterDropBlue
+                        imageVector =
+                            when (wateringStatus) {
+                                WateringStatus.TODAY,
+                                WateringStatus.UPCOMING,
+                                WateringStatus.NO_PERIOD,
+                                -> IconPack.WaterDropBlue
 
-                            WateringStatus.TODAY_DONE -> IconPack.WaterDropWithBackground
-                            WateringStatus.OVERDUE -> IconPack.WaterDropRed
-                        },
+                                WateringStatus.TODAY_DONE -> IconPack.WaterDropWithBackground
+
+                                WateringStatus.OVERDUE -> IconPack.WaterDropRed
+                            },
                         contentDescription = null,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(30.dp),
                     )
                 }
             }
-
 
             Spacer(Modifier.width(16.dp))
             Column {
@@ -480,44 +492,56 @@ private fun WateringInfo(
                         text = stringResource(R.string.watering),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        text = when (wateringStatus) {
-                            WateringStatus.NO_PERIOD,
-                            WateringStatus.OVERDUE -> {
-                                stringResource(R.string.watering_d_day_plus_format, dDays)
-                            }
+                        text =
+                            when (wateringStatus) {
+                                WateringStatus.NO_PERIOD,
+                                WateringStatus.OVERDUE,
+                                -> {
+                                    stringResource(R.string.watering_d_day_plus_format, dDays)
+                                }
 
-                            else -> {
-                                stringResource(R.string.watering_d_day_minus_format, dDays)
-                            }
-                        },
+                                else -> {
+                                    stringResource(R.string.watering_d_day_minus_format, dDays)
+                                }
+                            },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
 
                 run {
-                    val lastWateringText = if (lastWateringDate == null) stringResource(R.string.watering_no_record) else run {
-                        val today = LocalDate.now()
-                        when (val daysBetween = ChronoUnit.DAYS.between(lastWateringDate, today)) {
-                            0L -> stringResource(R.string.today)
-                            in 1..Constants.LAST_WATERING_TEXT_CRITERION -> {
-                                stringResource(R.string.days_ago_format, daysBetween)
-                            }
+                    val lastWateringText =
+                        if (lastWateringDate == null) {
+                            stringResource(R.string.watering_no_record)
+                        } else {
+                            run {
+                                val today = LocalDate.now()
+                                when (val daysBetween = ChronoUnit.DAYS.between(lastWateringDate, today)) {
+                                    0L -> {
+                                        stringResource(R.string.today)
+                                    }
 
-                            else -> lastWateringDate.toDateString()
+                                    in 1..Constants.LAST_WATERING_TEXT_CRITERION -> {
+                                        stringResource(R.string.days_ago_format, daysBetween)
+                                    }
+
+                                    else -> {
+                                        lastWateringDate.toDateString()
+                                    }
+                                }
+                            }
                         }
-                    }
 
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = "${stringResource(R.string.watering_last_date)}: $lastWateringText",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -528,19 +552,20 @@ private fun WateringInfo(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = stringResource(R.string.watering_alarm) +
+                    text =
+                        stringResource(R.string.watering_alarm) +
                             ": ${wateringAlarm.toTimeString()}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Switch(
                     checked = isWateringActive,
                     onCheckedChange = { onEvent(PlantDetailEvent.ToggleWateringAlarmActive(it)) },
-                    width = 36.dp
+                    width = 36.dp,
                 )
             }
         }
@@ -553,12 +578,13 @@ private fun WateringSection(
     memo: String?,
     isHarvested: Boolean,
     wateringStatus: WateringStatus,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     // 최초 진입 완료 상태는 즉시 보이고, 이후 상태 변경은 기존 전환을 유지한다.
-    val cancelButtonState = remember {
-        MutableTransitionState(wateringStatus == WateringStatus.TODAY_DONE)
-    }
+    val cancelButtonState =
+        remember {
+            MutableTransitionState(wateringStatus == WateringStatus.TODAY_DONE)
+        }
 
     // DB 복원과 취소 모두 상태 전환 애니메이션으로 반영한다.
     LaunchedEffect(wateringStatus) {
@@ -566,22 +592,24 @@ private fun WateringSection(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                RoundedCornerShape(15.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                    RoundedCornerShape(15.dp),
+                ).padding(16.dp),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier.size(48.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
-                    .clickable { onEvent(PlantDetailEvent.OnWateringCalendarClicked) },
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(48.dp)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
+                        .clickable { onEvent(PlantDetailEvent.OnWateringCalendarClicked) },
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(Calendar, contentDescription = stringResource(R.string.watering_calendar), tint = MaterialTheme.colorScheme.onPrimary)
             }
@@ -589,17 +617,17 @@ private fun WateringSection(
                 Spacer(Modifier.width(8.dp))
                 WateringButton(
                     modifier = Modifier.weight(1f),
-                    onEvent = onEvent
+                    onEvent = onEvent,
                 )
                 AnimatedVisibility(
                     visibleState = cancelButtonState,
                     enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),
-                    exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut()
+                    exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut(),
                 ) {
                     // padding(start)을 AnimatedVisibility 안으로 넣어야 gap도 함께 shrink됨
                     WateringCancelButton(
                         modifier = Modifier.padding(start = 8.dp),
-                        onEvent = onEvent
+                        onEvent = onEvent,
                     )
                 }
             }
@@ -610,13 +638,13 @@ private fun WateringSection(
             text = memo ?: "${stringResource(R.string.memo)}:",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    MaterialTheme.colorScheme.surfaceContainerLow,
-                    RoundedCornerShape(10.dp)
-                )
-                .padding(10.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                        RoundedCornerShape(10.dp),
+                    ).padding(10.dp),
         )
     }
 }
@@ -624,28 +652,29 @@ private fun WateringSection(
 @Composable
 private fun WateringButton(
     modifier: Modifier = Modifier,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     Row(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
-            .clickableWithoutRipple { onEvent(PlantDetailEvent.OnWateringClicked) }
-            .heightIn(min = 48.dp)
-            .padding(vertical = 10.dp),
+        modifier =
+            modifier
+                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
+                .clickableWithoutRipple { onEvent(PlantDetailEvent.OnWateringClicked) }
+                .heightIn(min = 48.dp)
+                .padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             imageVector = IconPack.WaterDropWhite,
             contentDescription = null,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onTertiary)
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onTertiary),
         )
         Spacer(Modifier.width(4.dp))
         Text(
             text = stringResource(R.string.watering),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onTertiary
+            color = MaterialTheme.colorScheme.onTertiary,
         )
     }
 }
@@ -653,20 +682,21 @@ private fun WateringButton(
 @Composable
 private fun WateringCancelButton(
     modifier: Modifier = Modifier,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(15.dp))
-            .clickableWithoutRipple { onEvent(PlantDetailEvent.OnCancelWateringClicked) }
-            .padding(horizontal = 8.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(15.dp))
+                .clickableWithoutRipple { onEvent(PlantDetailEvent.OnCancelWateringClicked) }
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.cancel),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onErrorContainer
+            color = MaterialTheme.colorScheme.onErrorContainer,
         )
     }
 }
@@ -674,37 +704,37 @@ private fun WateringCancelButton(
 @Composable
 private fun HarvestMemoBox(
     modifier: Modifier = Modifier,
-    harvestMemo: String
+    harvestMemo: String,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                RoundedCornerShape(15.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                    RoundedCornerShape(15.dp),
+                ).padding(16.dp),
     ) {
         Text(
             text = stringResource(R.string.harvest_memo),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             text = harvestMemo,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    MaterialTheme.colorScheme.surfaceContainerLow,
-                    RoundedCornerShape(10.dp)
-                )
-                .padding(10.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                        RoundedCornerShape(10.dp),
+                    ).padding(10.dp),
         )
     }
 }
@@ -712,20 +742,21 @@ private fun HarvestMemoBox(
 @Composable
 private fun CancelHarvestButton(
     modifier: Modifier = Modifier,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     OutlinedButton(
         onClick = { onEvent(PlantDetailEvent.OnCancelHarvestClicked) },
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
-        )
+        colors =
+            ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary,
+            ),
     ) {
         Text(
             text = stringResource(R.string.cancel_harvest),
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
         )
     }
 }
@@ -735,38 +766,40 @@ private fun HarvestSection(
     modifier: Modifier = Modifier,
     isExpanded: Boolean,
     memoInput: String,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                RoundedCornerShape(15.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                    RoundedCornerShape(15.dp),
+                ).padding(16.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickableWithoutRipple { onEvent(PlantDetailEvent.OnHarvestSectionToggled) },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickableWithoutRipple { onEvent(PlantDetailEvent.OnHarvestSectionToggled) },
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.harvest),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Image(
                 imageVector = IconPack.CaretDown,
                 contentDescription = null,
-                modifier = Modifier
-                    .size(20.dp)
-                    .rotate(if (isExpanded) 180f else 0f)
+                modifier =
+                    Modifier
+                        .size(20.dp)
+                        .rotate(if (isExpanded) 180f else 0f),
             )
         }
 
@@ -780,23 +813,23 @@ private fun HarvestSection(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.harvest_memo_hint),
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     },
                     minLines = 3,
                     maxLines = 5,
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(10.dp),
                 )
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { onEvent(PlantDetailEvent.OnHarvestClicked) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(10.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.harvest),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -809,38 +842,38 @@ private fun DiarySection(
     modifier: Modifier = Modifier,
     plantName: String,
     diaryList: List<DiaryListItemUiModel>,
-    onEvent: (PlantDetailEvent) -> Unit
+    onEvent: (PlantDetailEvent) -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                RoundedCornerShape(15.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(15.dp))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                    RoundedCornerShape(15.dp),
+                ).padding(16.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.plant_diary),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
             Button(
                 onClick = { onEvent(PlantDetailEvent.OnNewDiaryClicked) },
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
             ) {
                 Text(
                     text = stringResource(R.string.new_diary),
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
         }
@@ -852,27 +885,29 @@ private fun DiarySection(
             diaryList.forEach { diary ->
                 PlantDetailDiaryItem(
                     diary = diary,
-                    onClick = { onEvent(PlantDetailEvent.OnDiaryClicked(diary.id)) }
+                    onClick = { onEvent(PlantDetailEvent.OnDiaryClicked(diary.id)) },
                 )
             }
             Button(
                 onClick = { onEvent(PlantDetailEvent.OnMoreDiaryClicked) },
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(10.dp)
-                    )
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    ),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(10.dp),
+                        ),
             ) {
                 Text(
                     text = stringResource(R.string.view_more),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -880,51 +915,50 @@ private fun DiarySection(
 }
 
 @Composable
-private fun DiaryEmpty(
-    plantName: String
-) {
+private fun DiaryEmpty(plantName: String) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_notebook))
     Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         LottieAnimation(
             composition = composition,
             iterations = LottieConstants.IterateForever,
-            modifier = Modifier
-                .size(100.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            modifier =
+                Modifier
+                    .size(100.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest),
         )
 
         Spacer(Modifier.height(8.dp))
         Text(
             text = stringResource(R.string.diary_list_empty_with_plantName, plantName),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
-
 
 @Preview(showBackground = true, name = "Light", uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun PreviewContent() {
-    val state = PlantDetailState(
-        plantImagePath = null,
-        plantName = "바질",
-        createdAt = LocalDate.now(),
-        dDays = 1,
-        wateringStatus = WateringStatus.TODAY_DONE,
-        lastWateringDate = LocalDate.now().minusDays(3),
-        wateringAlarmTime = LocalTime.of(9, 0),
-        isWateringActive = true,
-        memo = "물을 줄 때는 흙이 마른 것을 확인하고 화분 받침대에 고인 물은 버려주세요."
-    )
+    val state =
+        PlantDetailState(
+            plantImagePath = null,
+            plantName = "바질",
+            createdAt = LocalDate.now(),
+            dDays = 1,
+            wateringStatus = WateringStatus.TODAY_DONE,
+            lastWateringDate = LocalDate.now().minusDays(3),
+            wateringAlarmTime = LocalTime.of(9, 0),
+            isWateringActive = true,
+            memo = "물을 줄 때는 흙이 마른 것을 확인하고 화분 받침대에 고인 물은 버려주세요.",
+        )
     GardenLogTheme {
         Content(
             state = state,
-            onEvent = {}
+            onEvent = {},
         )
     }
 }
@@ -934,25 +968,26 @@ private fun PreviewContent() {
 @Composable
 private fun PreviewDiarySection() {
     val now = LocalDate.now()
-    val diaryList = listOf(
-        DiaryListItemUiModel(
-            id = 1,
-            date = now,
-            content = "오늘은 물을 주었습니다. 새 싹이 나기 시작했어요.",
-            imagePath = null
-        ),
-        DiaryListItemUiModel(
-            id = 2,
-            date = now.minusDays(4),
-            content = "햇빛이 잘 드는 곳으로 옮겨주었습니다.",
-            imagePath = null
+    val diaryList =
+        listOf(
+            DiaryListItemUiModel(
+                id = 1,
+                date = now,
+                content = "오늘은 물을 주었습니다. 새 싹이 나기 시작했어요.",
+                imagePath = null,
+            ),
+            DiaryListItemUiModel(
+                id = 2,
+                date = now.minusDays(4),
+                content = "햇빛이 잘 드는 곳으로 옮겨주었습니다.",
+                imagePath = null,
+            ),
         )
-    )
     GardenLogTheme {
         DiarySection(
             diaryList = diaryList,
             plantName = "식물이름",
-            onEvent = {}
+            onEvent = {},
         )
     }
 }
