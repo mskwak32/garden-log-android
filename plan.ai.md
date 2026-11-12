@@ -1,341 +1,399 @@
-# 식물별 커스텀 할일 일정 기능 계획
+# 일기 탭 월별/연도별 보기 + 정렬 순서 유지 계획
 
-> 상태: 계획 확정 단계 (구현 전). `[결정]`은 사용자 확인 완료, `[제안]`은 기본안으로 진행할 예정이지만 확인이 필요한 항목, `[미결]`은 사용자 답변이 필요한 항목.
+> 상태: 계획 단계. **구현은 사용자가 "구현해줘"라고 할 때 시작한다.**
+> `[결정]`은 사용자 확인 완료, `[제안]`은 기본안으로 진행할 예정이지만 확인이 필요한 항목.
+> 이전 계획(식물별 할일 일정)은 git 이력(`d105cef`)에 있다.
 
 ## 1. 목표
 
-- 식물마다 물주기 외에 사용자 정의 할일 일정(이하 "할일")을 여러 개 등록한다.
-- 할일은 **1회성**과 **반복성** 두 종류다.
-- 완료 기록은 물주기처럼 날짜별 이력으로 남기고, 물주기 기록이 보이는 곳에 함께 표시한다.
-- 할일 색상은 종류와 관계없이 **갈색** 하나만 쓴다.
-- 할일을 삭제하거나 1회성 할일을 완료해도 **완료 이력은 DB에 남긴다**. 그래야 달력과 PDF에 계속 표시된다.
-- 화면을 텍스트로만 채우지 않고 적절히 아이콘을 쓴다.
+- 일기 탭(`DiaryListScreen`)에서 **월별 / 연도별** 보기를 선택한다. [결정]
+- 아래 값은 앱을 재실행해도 유지한다. [결정]
+  - 일기 탭 보기 단위 (월별/연도별)
+  - 일기 탭 정렬 순서 (`DiaryListSortOrder`)
+  - 홈(식물 목록) 정렬 순서 (`PlantListSortOrder`)
+- 일기 탭 TopBar의 화살표·날짜 텍스트·"이번달" 버튼의 시각 크기를 줄인다. 클릭 영역은 유지한다.
 
-## 2. 표시 위치 [결정]
+## 2. 현황
 
-| 위치 | 파일 | 현재 | 할일 반영 |
-|---|---|---|---|
-| 식물 상세 | `plant_detail/PlantDetailScreen.kt` | 물주기 정보·버튼 박스 | 할일 카드 + 추가 버튼 |
-| 물주기 달력 다이얼로그 | `plant_detail/PlantDetailWateringDateDialog.kt` | 파란 점, 선택 날짜의 "물주기" 행 | 갈색 점 1개 + 할일 제목 행. 할일별 달력으로도 재사용 |
-| PDF 내보내기 | `core/pdf/.../PdfDataSourceImpl.kt` | 날짜 옆 물방울 | 사진 다음, 본문 앞에 `● 제목` 목록 |
-| 일기 상세 | `diary_detail/DiaryDetailScreen.kt` | 날짜 옆 물방울 | 날짜 아래, 본문 위에 `● 제목` 목록 |
-| 일기 작성/수정 | `diary_edit/DiaryEditScreen.kt` | 날짜 필드 물방울 | 반영 안 함 |
-| 식물 목록 | `plant_list/PlantListItem.kt` | 물주기 아이콘 + D-day | 할일 D-day 2번째 줄 추가 |
-| 알림 | `app/.../alarm/*` | 물주기 알림, 부팅 재등록 | 할일 알림 추가 |
+- DataStore, SharedPreferences 모두 없다. 위 세 값은 모두 메모리 상태라 재실행 시 초기화된다.
+  - 일기 탭: `DiaryListState.sortOder` (기본 `CREATED_LATEST`)
+  - 홈: `PlantListViewModel._sortOrder: MutableStateFlow` (기본 `CREATED_LATEST`)
+- 일기 조회 DAO는 이미 `startDate ~ endDate`로 조회한다. **DB 스키마·마이그레이션 변경 없음.**
+- 외부 저장소 접근 패턴 참고: `core/remote`의 `AppConfigRemoteSource`(인터페이스) → `source_impl/` → `data`의 `AppConfigRepositoryImpl`이 주입받아 사용. DataStore도 같은 패턴으로 만든다.
 
-## 3. 계산 규칙
+## 3. 화면
 
-### 3.1 할일 종류 [결정]
+### 3.1 토글 위치 [제안]
 
-| 항목 | 1회성 (`ONE_TIME`) | 반복성 (`REPEAT`) |
+정렬 필터 줄 start에 세그먼트 토글 `[월별│연도별]`, end에 기존 정렬 드롭다운.
+
+- 지금 비어 있는 공간을 쓴다.
+- 단위·정렬 같은 "보기 방식"을 한 줄에 모은다. TopBar는 기간 이동만 담당한다.
+- 선택지가 2개라 드롭다운보다 한 번 덜 누른다.
+- TopBar start 배치로 바꿔도 상태/이벤트는 같고 Composable 위치만 다르다.
+
+### 3.2 TopBar 크기 조정 [제안]
+
+| 요소 | 현재 | 변경 |
 |---|---|---|
-| 날짜 필드 의미 | 예정일 | 시작일(첫 예정일) |
-| 반복 주기 | 없음 | 1 ~ `Constants.MAX_WATERING_PERIOD`일 |
-| 완료 버튼 | 확인 다이얼로그 → 오늘 날짜로 이력 저장 → 카드 사라짐 | 오늘 날짜로 이력 저장 → D-day 갱신 |
-| 달력 완료 | 선택 날짜로 완료(확인 다이얼로그) → 카드 사라짐 | 선택 날짜 완료 추가/취소 |
-| 취소 버튼 | 없음 | 물주기와 같음: **오늘 완료 이력이 있을 때** 노출 |
-| 수정 시 종류 변경 | 불가 | 불가 |
+| ◀ ▶ | 아이콘 30dp = 클릭 영역 30dp | **클릭 영역 30dp 유지**, 안의 아이콘만 20dp (`Box(Modifier.size(30.dp).clip().clickable(), contentAlignment = Center) { Icon(Modifier.size(20.dp)) }`) |
+| 기간 텍스트 | `titleLarge` 22sp, 클릭 영역 = 텍스트 크기 | `titleMedium` 16sp + `SemiBold`, `padding(horizontal = 8.dp, vertical = 6.dp)`로 클릭 영역 확보 |
+| 이번달/올해 | `titleMedium` 16sp + `padding(10.dp)` | `labelLarge` 14sp, 패딩 유지 |
+| 화살표 ↔ 텍스트 간격 | `Spacer(16.dp)` | `Spacer(8.dp)` (텍스트에 패딩이 생긴 만큼 축소) |
 
-- 1회성은 완료하면 할일이 사라지므로 완료를 되돌릴 수 없다. 완료 이력은 물주기 달력과 PDF에서 조회만 가능하다.
+> Material 권장 최소 터치 영역은 48dp이지만, 현재 30dp로 사용 중이고 문제가 보고된 적 없으므로 현재 크기를 유지한다.
 
-### 3.2 다음 예정일 [결정]
+### 3.3 연도별 모드
 
-- 1회성: `nextDue = date`
-- 반복성: `latest` = 해당 할일의 최신 완료 이력 날짜
-  - `latest == null` 또는 `latest < date` → `nextDue = date`
-  - 그 외 → `nextDue = latest + periodDays`
-  - 수정 다이얼로그의 날짜 초기값은 현재 `nextDue`이다. 날짜를 **변경했을 때만** `date`를 갱신한다.
-  - 시작일 이전 날짜로 완료하면(`latest < date`) 예정일은 시작일 그대로다.
-- 달력에서 과거 날짜를 추가해도 `latest`보다 이전이면 예정일은 바뀌지 않는다.
+- 타이틀 `2026-11` → `2026년` (`year_format` 재사용)
+- ◀ ▶: 이전/다음 연도
+- 우측 버튼: "이번달" → "올해"
+- 타이틀 탭: 연도 선택 다이얼로그
+- 목록: 월 구분 헤더(`11월`) [제안]
 
-### 3.3 D-day 표기 [결정]
+### 3.4 연도 선택 다이얼로그 [결정]
 
-물주기 문자열(`watering_d_day_minus_format` / `plus_format`)을 재사용한다.
-- 상세 카드: `nextDue > today` → `D-n`, `== today` → `D-0`, `< today` → `D+n`
-- 식물 목록: 물주기 표기와 같이 오늘이면 "오늘"로 표시한다.
+기존 `core/common_ui/dialog/SelectYearMonthDialog`에 파라미터를 추가한다.
 
-### 3.4 날짜 제약 [결정]
-
-- 등록/수정 날짜(예정일·시작일): 과거·미래 모두 허용. 과거면 바로 `D+n`이다.
-- 완료 날짜: 물주기와 같이 **식물 심은 날 ~ 오늘** 범위만 추가할 수 있다. 범위 밖 기존 이력은 취소만 가능하다.
-- 수확한 식물: 할일 카드와 추가 버튼을 숨기고, 완료·수정을 막는다. 알람은 중지하고 수확 취소 시 복원한다. 달력 이력은 유지한다.
-
-## 4. 데이터 설계 (Room v8 → v9)
-
-### 4.1 `plant_task` (진행 중인 할일) [결정]
-
-| 컬럼 | 타입 | 설명 |
-|---|---|---|
-| `id` | INTEGER PK AUTOINCREMENT | |
-| `plantId` | INTEGER NOT NULL | index |
-| `title` | TEXT NOT NULL | 최대 20자 |
-| `content` | TEXT NULL | 내용(선택) |
-| `type` | TEXT NOT NULL | `ONE_TIME` / `REPEAT` |
-| `date` | TEXT NOT NULL | 1회성: 예정일, 반복성: 기준 예정일 |
-| `periodDays` | INTEGER NULL | 반복성만 |
-| `alarm_time`, `alarm_isActive` | TEXT, INTEGER | `@Embedded(prefix = "alarm_") AlarmEntity` 재사용 |
-| `createdAt` | TEXT NOT NULL | 정렬(생성순) |
-
-- 1회성 완료와 할일 삭제는 모두 **행 삭제**다. 완료/보관 플래그는 두지 않는다.
-
-### 4.2 `plant_task_log` (완료 이력) [결정]
-
-| 컬럼 | 타입 | 설명 |
-|---|---|---|
-| `id` | INTEGER PK AUTOINCREMENT | |
-| `plantId` | INTEGER NOT NULL | 달력·PDF·일기 상세 조회 기준 |
-| `taskId` | INTEGER NULL | 원본 할일. FK 없음. 할일 삭제 후에도 값 유지(AUTOINCREMENT라 재사용 없음) |
-| `title` | TEXT NOT NULL | 완료 시점 제목 스냅샷 |
-| `date` | TEXT NOT NULL | 완료 날짜 |
-
-- 인덱스: `(plantId, date)`, UNIQUE `(taskId, date)`.
-- FK·CASCADE 없음. 할일을 삭제해도 이력은 남는다.
-- 할일 제목을 수정해도 과거 이력 제목은 바뀌지 않는다(이력은 그 시점 기록).
-
-### 4.3 마이그레이션
-
-- `core/database/migration/Migration_8_9.kt`: 두 테이블과 인덱스 생성. 인덱스 이름은 Room 규칙(`index_plant_task_plantId`, `index_plant_task_log_plantId_date`, `index_plant_task_log_taskId_date`).
-- `GardenDatabase` version 9, entities·`plantTaskDao()` 추가. `DatabaseModule`에 `MIGRATION_8_9`, DAO provider 추가.
-- 스키마 `9.json`은 빌드 결과를 커밋한다.
-
-### 4.4 식물 삭제·수확 연동
-
-- `DeletePlantUseCase`: 할일·이력 삭제, 할일 알람 전부 취소.
-- 참고(범위 외): 식물 삭제 시 `watering_log`가 지워지지 않는 기존 문제는 이번 작업에서 다루지 않는다.
-- `HarvestPlantUseCase.harvest`: 할일 알람을 물리적으로만 취소(DB `alarm_isActive` 유지).
-- `HarvestPlantUseCase.cancelHarvest`: 활성 할일 알람 재등록.
-
-## 5. 레이어별 구현 목록
-
-### 5.1 domain
-
-- `model/PlantTask.kt`
-  - `PlantTask(id, plantId, title, content, type, date, periodDays, alarm, createdAt, latestDoneDate, isDoneToday)`
-  - `enum class PlantTaskType { ONE_TIME, REPEAT }`
-  - `PlantTaskLog(plantId, taskId: Int?, title, date)`
-- `repository/PlantTaskRepository.kt`
-  - `observeTasks(plantId)`: 생성순, 최신 완료일 포함
-  - `observeAllTasks()`: 식물 목록용(plantId별 할일)
-  - `getTask`, `addTask(): Int`, `updateTask(task, isDateChanged)`, `deleteTask(taskId)`
-  - `setTaskLog(taskId, date, isDone): Boolean`: 물주기 `setWateringLog`와 같은 목표 상태 적용 방식. 1회성 `isDone=true`면 이력 추가와 행 삭제를 한 트랜잭션에서 처리. 수확·범위 검증 포함
-  - `observeTaskLogs(taskId)`: 할일별 달력
-  - `observePlantTaskLogs(plantId)`: 물주기 달력
-  - `getTaskTitlesByDate(plantId, date)`: 일기 상세
-  - `getPlantTaskLogsByRange(plantId, start, end)`: PDF
-  - `getActiveAlarmTaskIds()`, `updateAlarmActivation(taskId, isActive)`, `deleteByPlantId(plantId)`
-- `repository/PlantTaskAlarmRepository.kt`: `setAlarm(taskId, dateTime)`, `cancelAlarm(taskId)`
-- `usecase/task/`
-  - `GetPlantTasksUseCase`, `GetNextDueDateUseCase`(3.2, 순수 함수), `GetTaskDaysUseCase`(D-day·지남)
-  - `GetNearestTaskDueDatesUseCase`: `Flow<Map<plantId, LocalDate>>`. 식물별 할일 `nextDue` 중 가장 이른 날짜(지난 일정 포함). 할일이 없는 식물은 제외
-  - `AddPlantTaskUseCase`, `UpdatePlantTaskUseCase`, `DeletePlantTaskUseCase` (알람 재설정/취소 포함)
-  - `UpdatePlantTaskLogUseCase(taskId, date, isDone)`: 결과 `WateringUpdateResult` 재사용(CHANGED/UNCHANGED/ALARM_FAILED). 이름 공용화는 구현 시 판단
-  - `CompleteTodayTaskUseCase`, `CancelTodayTaskUseCase`: 오늘 날짜 래퍼
-  - `SetPlantTaskAlarmUseCase`: `SetWateringAlarmUseCase`의 주기 건너뛰기 로직 재사용. 1회성은 예정 시각이 지났으면 등록하지 않음. 수확한 식물이면 등록하지 않음
-  - `UpdatePlantTaskAlarmActivationUseCase`
-  - `GetTaskLogsUseCase(taskId)`, `GetPlantTaskLogsUseCase(plantId)`, `GetTaskTitlesByDateUseCase`, `GetPlantTaskLogsForExportUseCase`
-- `model/ExportRequest.kt`: `DiaryExport.taskTitles: List<String> = emptyList()`
-
-### 5.2 core/database
-
-- `entity/PlantTaskEntity.kt`, `entity/PlantTaskLogEntity.kt`
-- `dao/PlantTaskDao.kt`: 할일 + 할일별 `MAX(date)` 조회, 이력 insert(IGNORE)/delete, 범위·날짜 조회, plantId 일괄 삭제
-- `GardenDatabaseConverter`: 필요 시 `PlantTaskType` 변환
-- `Migration_8_9.kt`, `GardenDatabase`, `DatabaseModule`
-
-### 5.3 data
-
-- `mapper/DatabaseMapper.kt`, `mapper/ExportMapper.kt`(`taskTitles`)
-- `repository/PlantTaskRepositoryImpl.kt`: 수확 식물이면 `WateringValidationException(HARVESTED)`, 범위 밖 추가면 `OUTSIDE_RANGE`. 예외 이름 공용화는 구현 시 판단
-- `di/RepositoryModule.kt`: `@Binds`
-
-### 5.4 core/pdf
-
-- `DiaryPdf.taskTitles: List<String>`
-- `addDiaryPages`: 날짜(+물방울) → 사진 → **할일 목록** → 본문. 할일마다 갈색 원(`canvas.drawCircle`) + 제목 한 줄, `ensureSpace`로 페이지 넘김 처리.
-- 갈색은 PDF 내부 상수로 둔다.
-- PDF는 기존처럼 일기가 있는 날짜만 출력한다. 일기가 없는 날의 할일 완료는 PDF에 나오지 않는다.
-
-### 5.5 app (알람)
-
-- `alarm/PlantTaskAlarmReceiver.kt` (신규, `exported=false`, Manifest 등록)
-  - extra `taskId`. 수신 시 할일·식물 이름 조회 → 알림 → 다음 알람 재예약
-  - ID 충돌 방지: 물주기는 `requestCode = plantId`, `notify(plantId)`, summary 1000을 쓴다.
-    - PendingIntent는 receiver 컴포넌트가 달라 `requestCode = taskId`로도 충돌하지 않는다.
-    - 알림은 `notify(TAG_TASK, taskId, …)`로 tag를 분리하고, summary ID는 별도 값(2000)을 쓴다.
-  - 별도 채널 `plantTaskNotification`("할일 알림")
-  - 알림 문구: 제목 "{식물이름} 할일", 본문 "{할일 제목}"
-  - 탭하면 `MainActivity` 실행
-- `alarm/PlantTaskAlarmRepositoryImpl.kt`: `setAlarmClock`, exact alarm 권한 없으면 skip
-- `BootReceiver`: 활성 할일 알람 재등록
-- `di/RepositoryModule.kt`(app), `di/UseCaseModule.kt` 갱신
-
-### 5.6 core/common_ui
-
-- `theme/Color.kt`: `TaskBrown`(라이트, 예: `0xFF8D6E63`), `TaskBrownLight`(다크, 예: `0xFFBCAAA4`), `TaskBrownText`(라이트 텍스트, 예: `0xFF6D4C41`)
-- 아이콘: 9장 참고
-
-### 5.7 feature/plant — 식물 상세
-
-**화면 배치**
-```
-Header
-WateringInfo            (수확 전)
-WateringSection         (달력/물주기/취소 + 메모)
-TaskCard × N            (수확 전, 생성순)
-AddTaskButton           (수확 전)
-HarvestMemoBox
-DiarySection
-Harvest…
+```kotlin
+@Composable
+fun SelectYearMonthDialog(
+    initialYearMonth: YearMonth,
+    showMonth: Boolean = true,          // false면 연도 드롭다운만 표시
+    onDismiss: () -> Unit,
+    onConfirm: (YearMonth) -> Unit      // showMonth=false면 월은 initialYearMonth의 월 유지
+)
 ```
 
-**TaskCard** — 할일 1개당 박스 1개. 기존 박스 스타일(`surfaceContainerLowest` + 1dp `surfaceContainerHighest` border, 15dp radius)
+- 제목: `showMonth`에 따라 `select_year_month` / `select_year`(신규)
+- `showMonth = false`면 월 `YearMonthDropdown`과 사이 `Spacer`를 그리지 않는다.
+- 기존 호출처는 기본값 `true`라 변경 없음.
+
+## 4. 구조
+
+### 4.1 모듈 의존 관계
+
 ```
-┌──────────────────────────────────────────┐
-│ [Gardening] 제목(Bold) D-3            [⋯] │ 1행: D-day는 제목 바로 오른쪽
-│ 내용 텍스트…                               │ 2행: 내용, 없으면 숨김
-│                                            │ ← 2·3행 사이 간격 확대(8dp)
-│ [Repeat] 7일마다 · 마지막 완료: 3일 전      │ 3행: 반복성 / 1회성은 [Event] 예정일: 2026.10.30
-│ [Alarm] 알림: 오전 9:00            [ ○ ]   │ 4행
-│ [📅] [ ✓ 완료                ] [취소]      │ 5행: 달력 / 완료 / 취소(반복성 오늘 완료 시)
-└──────────────────────────────────────────┘
+feature/plant ──▶ domain ◀── data ──▶ core/datastore (신규)
+                    ▲                  core/database
+app (UseCaseModule) ┘                  core/remote ...
 ```
-- 1행 [결정]: `Row { Icon; Text(title, Modifier.weight(1f, fill = false), maxLines = 2, ellipsis); Spacer(6dp); Text(dDay); Spacer(Modifier.weight(1f)); MoreButton }`
-  - `fill = false`라서 제목이 짧으면 D-day가 제목 바로 뒤에 붙는다.
-  - 제목이 길면 제목만 2줄로 줄바꿈되고, D-day는 제목 오른쪽(세로 가운데)에 남는다. ⋯ 버튼은 오른쪽 끝에 고정된다.
-- 2행 내용과 3행 사이는 8dp, 나머지 행 사이는 4dp 간격을 둔다.
-- 3행 "마지막 완료" 문구는 물주기와 같은 규칙(오늘 / n일 전 / 날짜, 없으면 "기록 없음").
-- 5행은 `WateringSection`과 같은 구성이다. 달력 버튼(48dp) → 완료 버튼(`weight(1f)`) → 취소 버튼(`MutableTransitionState` expand/shrink 애니메이션).
-  - 달력·완료 버튼 색 [결정]: 물주기 버튼과 같은 `primary` 배경으로 통일한다(달력 아이콘 `onPrimary`, 완료 버튼 `onTertiary` — 물주기 버튼과 동일).
-  - 갈색은 점, 할일 아이콘, 달력·PDF·일기 상세 표시에만 쓴다.
-- 지난 할일(`D+n`)은 D-day를 error 색으로 표시한다(물주기 OVERDUE와 같음) [제안].
-- 1회성 완료 → `PlantDetailTaskCompleteDialog`("할일을 완료하시겠습니까?" / 취소·완료).
 
-**AddTaskButton**
-- 전체 너비, 연한 배경(`surfaceContainerLow`) + 1dp border(`outlineVariant`) + `+` 아이콘 + "할일 일정 추가". 진한 채움 배경은 쓰지 않는다.
+- `core/datastore`는 domain을 모른다. 문자열로 저장하고, enum 변환은 `data`에서 한다. (`core/database`와 같은 규칙)
 
-**생성/수정 다이얼로그 (`PlantDetailTaskDialog.kt`)**
+### 4.2 core/datastore (신규 모듈)
+
 ```
-할일 일정 추가 / 할일 일정 수정
-[제목 _______________ 0/20]       필수
-[내용 _______________]            선택, 여러 줄
-(●) 1회성   ( ) 반복성             수정 시 비활성
-[event]  예정일/시작일  2026.10.22  >    DatePickerDialog
-[repeat] 반복 주기      7일         >    반복성만, 주기 휠("없음" 제외)
-[alarm]  알림 시간      오전 9:00   >    TimePicker
-                    [취소] [만들기]       ← 생성
-                    [삭제] [수정]         ← 수정 (삭제는 확인 다이얼로그)
+core/datastore/
+  build.gradle.kts
+  src/main/java/com/mskwak/datastore/
+    UserPreferencesLocalSource.kt              # 인터페이스
+    source_impl/UserPreferencesLocalSourceImpl.kt
+    di/DataStoreModule.kt
 ```
-- 입력 행은 `LabeledClickableField`를 재사용하고 앞에 아이콘을 둔다.
-- 반복 주기: `WateringPeriodDialog`에 "없음" 항목을 숨기는 파라미터를 추가해 재사용한다.
-- 제목이 공백이면 만들기/수정 비활성.
-- 생성 시 알림은 **꺼짐**, 시간 기본값 09:00. 카드 스위치로 켤 때 `canScheduleExactAlarms` → `ExactAlarmPermissionDialog` 흐름을 탄다.
 
-**달력 다이얼로그 재사용 (`PlantDetailWateringDateDialog.kt` → `PlantDetailRecordCalendarDialog.kt`)**
-- 다이얼로그 **제목을 제거**한다(물주기·할일 모두).
-- 상태에 `calendarTarget: CalendarTarget?`(`Watering` / `Task(taskId)`)을 두고, 같은 다이얼로그 컴포저블이 대상에 따라 데이터와 버튼을 바꾼다. 기존 `isWateringDateDialogOpen`, `wateringMonth`, `selectedWateringDate`, `isWateringSaving`, `wateringError`는 대상 공용 이름(`calendarMonth`, `calendarSelectedDate`, `isCalendarSaving`, `calendarError`)으로 정리한다.
+```kotlin
+interface UserPreferencesLocalSource {
+    val plantListSortOrder: Flow<String?>
+    val diaryListSortOrder: Flow<String?>
+    val diaryListPeriodUnit: Flow<String?>
 
-| 항목 | 물주기 달력 (`Watering`) | 할일 달력 (`Task`) |
-|---|---|---|
-| 진입 | 물주기 박스 달력 버튼 | 할일 카드 달력 버튼 |
-| 날짜 점 | 파란 점 + 갈색 점(그날 할일 이력이 1건 이상이면 1개) | 해당 할일 이력 갈색 점 |
-| 선택 날짜 상세 | `● 물주기`(파랑) + 할일 이력마다 `● 제목`(갈색) | `● 제목`(갈색) |
-| 저장 버튼 | 물주기 / 기록 취소 (기존) | 완료 / 완료 취소 |
-| 1회성 | - | "완료" → 확인 다이얼로그 → 완료되면 달력 닫힘, 카드 사라짐 |
-| 월 이동 범위 | 심은 날, 물주기·할일 이력, 수확일, 오늘 | 심은 날, 해당 할일 이력, 오늘 |
+    suspend fun setPlantListSortOrder(value: String)
+    suspend fun setDiaryListSortOrder(value: String)
+    suspend fun setDiaryListPeriodUnit(value: String)
+}
 
-- 할일 달력의 이력 구독은 달력이 열릴 때 `taskId`로 시작하고 닫힐 때 취소한다.
-- 접근성: 할일 기록이 있는 날짜의 contentDescription에 "할일 n건" 추가.
+internal class UserPreferencesLocalSourceImpl @Inject constructor(
+    private val dataStore: DataStore<Preferences>
+) : UserPreferencesLocalSource {
+    override val diaryListPeriodUnit = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[Keys.DIARY_LIST_PERIOD_UNIT] }
+    // ... 나머지 동일 패턴
 
-**상태/이벤트 (`PlantDetailState.kt`)**
-- `model/PlantTaskUiModel.kt`: `id, title, content, type, dDay, isOverdue, latestDoneDate, dueDate, periodDays, alarmTime, isAlarmActive, isDoneToday`
-- State: `tasks`, `plantTaskLogs: Map<LocalDate, List<String>>`, `calendarTarget`, `taskLogDates: Set<LocalDate>`(할일 달력), `taskDialog: PlantTaskDialogState?`, `isTaskSaving`
-- Event: `OnAddTaskClicked`, `OnTaskMoreClicked(id)`, `OnTaskDialogDismissed`, `OnTaskTitleChanged`, `OnTaskContentChanged`, `OnTaskTypeChanged`, `OnTaskDateChanged`, `OnTaskPeriodChanged`, `OnTaskAlarmTimeChanged`, `OnTaskSaveClicked`, `OnTaskDeleteClicked`, `OnTaskDeleteConfirmed`, `OnTaskCompleteClicked(id)`, `OnOneTimeTaskCompleteConfirmed(id, date)`, `OnTaskCancelClicked(id)`, `OnTaskCalendarClicked(id)`, `ToggleTaskAlarm(id, isActive)`
-- Effect: `ShowOneTimeTaskCompleteDialog(id, date)`, `ShowTaskDeleteConfirmDialog(id)`, 기존 `ShowExactAlarmPermissionDialog` 재사용
+    override suspend fun setDiaryListPeriodUnit(value: String) {
+        dataStore.edit { it[Keys.DIARY_LIST_PERIOD_UNIT] = value }
+    }
 
-**신규 파일**
-- `plant_detail/PlantDetailTaskCard.kt` (TaskCard, AddTaskButton, 프리뷰)
-- `plant_detail/PlantDetailTaskDialog.kt`
-- `plant_detail/PlantDetailTaskCompleteDialog.kt`
-- `plant_detail/PlantDetailTaskDeleteDialog.kt`
+    private object Keys {
+        val PLANT_LIST_SORT_ORDER = stringPreferencesKey("plant_list_sort_order")
+        val DIARY_LIST_SORT_ORDER = stringPreferencesKey("diary_list_sort_order")
+        val DIARY_LIST_PERIOD_UNIT = stringPreferencesKey("diary_list_period_unit")
+    }
+}
+```
 
-### 5.8 feature/plant — 식물 목록 [결정]
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+internal object DataStoreModule {
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("user_preferences") }
+}
 
-- `PlantListViewModel`: `GetNearestTaskDueDatesUseCase`를 `combine`해서 `PlantListItemUiModel.taskDDay: Int?`, `taskStatus`를 채운다. 수확한 식물은 null.
-- `PlantListItem` 오른쪽 영역
-  - 할일 D-day가 없으면 기존 그대로(물방울 30dp + titleMedium).
-  - 있으면 2줄: `[물방울 20dp] D-3` / `[할일 아이콘 20dp] D-1`, 텍스트는 `titleSmall`. 할일 D-day가 지났으면 error 색.
+@Module
+@InstallIn(SingletonComponent::class)
+internal abstract class DataStoreSourceModule {
+    @Binds @Singleton
+    abstract fun bindUserPreferencesLocalSource(impl: UserPreferencesLocalSourceImpl): UserPreferencesLocalSource
+}
+```
 
-### 5.9 feature/plant — 일기 상세 [결정]
+- `libs.versions.toml`: `androidx.datastore:datastore-preferences` 추가 (구현 시점 최신 stable 확인)
+- `settings.gradle.kts`: `include(":core:datastore")`
+- `data/build.gradle.kts`: `implementation(project(":core:datastore"))`
 
-- `DiaryDetailViewModel`: `GetTaskTitlesByDateUseCase(plantId, diary.createdDate)`로 `taskTitles`를 state에 채운다.
-- `DiaryDetailScreen`: 날짜 Row 아래, 본문 위에 글머리 목록으로 표시한다. 행마다 갈색 점(6dp) + 8dp 간격 + 제목(`bodyMedium`, `TaskBrownText`/다크 `TaskBrownLight`).
+### 4.3 domain
 
-### 5.10 feature/plant — 내보내기
+```kotlin
+// model/DiaryListPeriodUnit.kt
+enum class DiaryListPeriodUnit { MONTH, YEAR }
 
-- `DiaryExportViewModel`: `GetPlantTaskLogsForExportUseCase`로 날짜별 제목 목록을 받아 `DiaryExport.taskTitles`에 채운다.
+// model/DiaryListViewOption.kt — 일기 탭은 두 값을 항상 같이 쓰므로 묶어서 내보낸다
+data class DiaryListViewOption(
+    val periodUnit: DiaryListPeriodUnit,
+    val sortOrder: DiaryListSortOrder
+)
 
-### 5.11 analytics [제안]
+// repository/UserPreferenceRepository.kt
+interface UserPreferenceRepository {
+    val plantListSortOrder: Flow<PlantListSortOrder>
+    val diaryListViewOption: Flow<DiaryListViewOption>
 
-- `GardenEvent`: `AddTask(type, alarmEnabled)`, `CompleteTask(type, source)`, `CancelTask`, `DeleteTask`, `TaskAlarmToggle(enabled)`
+    suspend fun setPlantListSortOrder(order: PlantListSortOrder)
+    suspend fun setDiaryListSortOrder(order: DiaryListSortOrder)
+    suspend fun setDiaryListPeriodUnit(unit: DiaryListPeriodUnit)
+}
+```
 
-### 5.12 문자열
+UseCase (`usecase/preference/`)
 
-`strings.xml` 기존 항목(`cancel`, `delete`, `edit`, `today`, `days_ago_format`, `watering_d_day_*_format`, `watering_no_record` 등)을 먼저 재사용한다. 신규 항목은 **ko / en / ja** 모두 추가한다.
-- feature/plant: 할일 일정 추가/수정, 제목, 내용, 1회성, 반복성, 예정일, 시작일, 반복 주기, `%d일마다`, 알림 시간, 만들기, 수정, 완료, 완료 취소, 마지막 완료, 1회성 완료 확인 문구, 삭제 확인 문구, 접근성 문구
-- app: 할일 알림 채널 이름, 알림 제목 포맷
+| UseCase | 반환 |
+|---|---|
+| `GetPlantListSortOrderUseCase` | `Flow<PlantListSortOrder>` |
+| `SetPlantListSortOrderUseCase` | `suspend` |
+| `GetDiaryListViewOptionUseCase` | `Flow<DiaryListViewOption>` |
+| `SetDiaryListSortOrderUseCase` | `suspend` |
+| `SetDiaryListPeriodUnitUseCase` | `suspend` |
 
-## 6. 테스트 계획 (필요한 층에서만)
+### 4.4 data
 
-- domain 단위: `GetNextDueDateUseCase`(이력 없음 / 이력 ≥ 기준일 / 이력 < 기준일 / 지남), 할일 알람 다음 시각(주기 건너뛰기, 1회성 지난 시각 → null), 식물별 가장 이른 예정일
-- data Robolectric(`WateringPersistenceTest` 방식) `PlantTaskPersistenceTest`
-  - 1회성 완료 → 행 삭제 + 이력 유지
-  - 반복성 과거 날짜 완료/취소, 같은 날 중복 완료 무시
-  - 반복성 삭제 후 이력 유지(제목 스냅샷)
-  - 식물 삭제 시 할일·이력 삭제
-  - 수확 식물 완료 거부, 범위 밖 날짜 추가 거부
-- 마이그레이션 8→9: `MigrationTestHelper` 1건
-- UI: Compose Preview(카드 상태별, 다이얼로그 생성/수정, 달력 물주기/할일 모드, 목록 2줄, 일기 상세)
+```kotlin
+internal class UserPreferenceRepositoryImpl @Inject constructor(
+    private val localSource: UserPreferencesLocalSource
+) : UserPreferenceRepository {
 
-## 7. 구현 순서
+    override val plantListSortOrder = localSource.plantListSortOrder
+        .map { it.toEnumOrDefault(PlantListSortOrder.CREATED_LATEST) }
+        .distinctUntilChanged()
 
-1. DB: Entity, DAO, Migration 8→9, 스키마, 마이그레이션 테스트
-2. domain: 모델, Repository 인터페이스, UseCase + 단위 테스트
-3. data: RepositoryImpl, Mapper, DI + persistence 테스트
-4. app: 알람 receiver/repository, BootReceiver, Manifest, UseCaseModule
-5. common_ui: 색상, 아이콘
-6. 식물 상세: State/Event/ViewModel → TaskCard → 다이얼로그
-7. 달력 다이얼로그 공용화(제목 제거, 할일 모드)
-8. 식물 목록 2줄 D-day
-9. 일기 상세 할일 목록
-10. PDF
-11. 문자열 3개 언어, analytics
-12. `./gradlew test`, 실기기 확인(알림, 달력, PDF)
+    // 두 키를 combine — 다른 키(홈 정렬)가 바뀌어도 재방출되지 않도록 distinctUntilChanged
+    override val diaryListViewOption = combine(
+        localSource.diaryListPeriodUnit.map { it.toEnumOrDefault(DiaryListPeriodUnit.MONTH) },
+        localSource.diaryListSortOrder.map { it.toEnumOrDefault(DiaryListSortOrder.CREATED_LATEST) },
+        ::DiaryListViewOption
+    ).distinctUntilChanged()
 
-## 8. 질문 답변 기록
+    override suspend fun setDiaryListPeriodUnit(unit: DiaryListPeriodUnit) =
+        localSource.setDiaryListPeriodUnit(unit.name)
+    // ...
+}
 
-| # | 내용 | 결정 |
-|---|---|---|
-| Q1 | 완료 버튼 위치 | 5행. 물주기처럼 달력 버튼 + 완료 버튼 + 취소 버튼. 취소 노출 조건은 물주기와 같음 |
-| Q2 | 내용 입력 | 다이얼로그에 선택 입력 필드 추가 |
-| Q3 | 1회성 마지막 완료 행 | 예정일 표시(3행) |
-| Q4 | 과거 날짜 완료 | 할일별 달력에서 물주기처럼 추가/취소 |
-| Q5 | 일기 화면 표시 | 상세만. 날짜 아래, 본문 위, 갈색 점 글머리 목록 |
-| Q6 | 수확 식물 | 카드·추가 버튼 숨김, 알람 중지/복원, 이력 유지 |
-| Q7 | 종류 변경 | 불가 |
-| Q8 | PDF 위치 | 사진 다음, 본문 앞 |
-| Q9 | 달력 제목 | 제거 |
-| Q10 | 정렬 | 생성순 |
-| Q11 | 알림 | 생성 시 꺼짐. 알림 문구 "{식물이름} 할일" / "{제목}" |
-| Q12 | 식물 목록 | 가장 이른 할일 D-day를 2번째 줄에 표시. 할일 없으면 기존 표시 |
-| Q13 | 제목 길이 | 20자. 제목만 최대 2줄, D-day는 제목 오른쪽에 붙임 |
+// 저장값이 없거나 enum 이름이 바뀌어 매칭되지 않으면 기본값
+private inline fun <reified T : Enum<T>> String?.toEnumOrDefault(default: T): T =
+    this?.let { name -> enumValues<T>().firstOrNull { it.name == name } } ?: default
+```
 
-## 9. 아이콘
+- `data/di/RepositoryModule.kt`에 `bindUserPreferenceRepository` 추가
+- `app/di/UseCaseModule.kt`에 UseCase 5개 `@Provides`
 
-기존: 더보기(`MoreHorizBlack`), 알림(`AlarmBlack`), 달력(`Calendar`), 날짜(`EventBlack`), 추가(`AddWhite`, tint 처리).
+### 4.5 월 → 기간 계산 이동
 
-| 용도 | 아이콘 | 상태 |
-|---|---|---|
-| 할일 아이콘(카드 1행, 식물 목록) | `IconPack.Gardening` (사용자 제공 이미지를 벡터화, 다색) | 추가 완료 |
-| 완료 버튼 | `IconPack.Check` | 추가 완료 |
-| 반복 주기(카드 3행, 다이얼로그) | `IconPack.Repeat` | 추가 완료 |
-| 추가 버튼 | `AddWhite` tint로 대체 | 기존 |
+**변경 전**
+
+```kotlin
+// ViewModel
+getDiariesUseCase(year = ym.year, month = ym.monthValue, plantId = ..., sortOder = ...)
+
+// GetDiariesUseCase
+operator fun invoke(year: Int, month: Int, sortOder: DiaryListSortOrder, plantId: Int? = null) =
+    diaryRepository.getDiaries(year, month, plantId).map { it.applySort(sortOder) }
+
+// DiaryRepository
+fun getDiaries(year: Int, month: Int, plantId: Int?): Flow<List<Diary>>
+
+// DiaryRepositoryImpl — 기간 계산이 여기 있음
+override fun getDiaries(year: Int, month: Int, plantId: Int?): Flow<List<Diary>> {
+    val startDate = LocalDate.of(year, month, 1)
+    val endDate = startDate.withDayOfMonth(startDate.lengthOfMonth())
+    ...
+}
+```
+
+**변경 후**
+
+```kotlin
+// ViewModel — 단위와 기준 연월만 넘긴다
+getDiariesUseCase(
+    periodUnit = option.periodUnit,
+    yearMonth = state.currentYearMonth,
+    sortOrder = option.sortOrder,
+    plantId = state.currentPlant?.plantId
+)
+
+// GetDiariesUseCase — 기간 계산 담당
+operator fun invoke(
+    periodUnit: DiaryListPeriodUnit,
+    yearMonth: YearMonth,
+    sortOrder: DiaryListSortOrder,
+    plantId: Int? = null
+): Flow<List<Diary>> {
+    val (startDate, endDate) = periodRange(periodUnit, yearMonth)
+    return diaryRepository.getDiaries(startDate, endDate, plantId)
+        .map { it.applySort(sortOrder) }
+        .flowOn(Dispatchers.IO)
+}
+
+private fun periodRange(unit: DiaryListPeriodUnit, ym: YearMonth): Pair<LocalDate, LocalDate> =
+    when (unit) {
+        DiaryListPeriodUnit.MONTH -> ym.atDay(1) to ym.atEndOfMonth()
+        DiaryListPeriodUnit.YEAR -> LocalDate.of(ym.year, 1, 1) to LocalDate.of(ym.year, 12, 31)
+    }
+
+// DiaryRepository
+fun getDiaries(startDate: LocalDate, endDate: LocalDate, plantId: Int?): Flow<List<Diary>>
+
+// DiaryRepositoryImpl — 받은 기간을 DAO에 그대로 전달
+override fun getDiaries(startDate: LocalDate, endDate: LocalDate, plantId: Int?): Flow<List<Diary>> {
+    val diariesFlow = if (plantId == null) {
+        diaryDao.getDiaries(startDate, endDate)
+    } else {
+        diaryDao.getDiariesByPlantId(plantId, startDate, endDate)
+    }
+    ... // 이하 기존과 동일
+}
+```
+
+- 이유: "한 달/한 해가 언제부터 언제까지인가"는 비즈니스 규칙이라 domain에 둔다. Repository는 기간만 받아 조회한다.
+- `DiaryRepository.getDiaries` 호출처는 `GetDiariesUseCase`뿐 (구현 시 grep 재확인).
+
+### 4.6 데이터 흐름
+
+**읽기 (앱 시작 / 값 변경 시)**
+
+```
+DataStore<Preferences>.data
+  → UserPreferencesLocalSourceImpl   (String?)
+  → UserPreferenceRepositoryImpl     (enum, 기본값 처리, combine)
+  → GetDiaryListViewOptionUseCase    (Flow<DiaryListViewOption>)
+  → DiaryListViewModel               setState { copy(viewOption = it) }
+  → DiaryListState.viewOption        → 토글·정렬·TopBar 표시
+                                     → observeDiaries()가 GetDiariesUseCase 재조회
+```
+
+**쓰기 (사용자가 토글/정렬 변경)**
+
+```
+Screen → setEvent(PeriodUnitChanged(YEAR))
+  → ViewModel: viewModelScope.launch { setDiaryListPeriodUnitUseCase(YEAR) }
+  → Repository → LocalSource → dataStore.edit { }
+  → DataStore가 새 값을 방출 → 위 "읽기" 흐름으로 State 갱신
+```
+
+- **단방향:** 이벤트에서 `setState`로 단위/정렬을 직접 바꾸지 않는다. DataStore가 유일한 출처다.
+- 홈 정렬도 같은 흐름: `PlantListViewModel._sortOrder: MutableStateFlow` → `getPlantListSortOrderUseCase()` Flow로 교체, `OnSortChanged`는 `setPlantListSortOrderUseCase` 호출.
+
+### 4.7 feature/plant
+
+**DiaryListState**
+
+```kotlin
+data class DiaryListState(
+    val viewOption: DiaryListViewOption? = null, // null = DataStore 첫 값 받기 전
+    val currentYearMonth: YearMonth = YearMonth.now(),
+    val currentPlant: DiaryListPlantFilterUiModel? = null,
+    val plantFilterList: List<DiaryListPlantFilterUiModel> = emptyList(),
+    val diaries: List<DiaryListItemUiModel> = emptyList()
+)
+```
+
+- 기존 `sortOder` 필드는 `viewOption.sortOrder`로 대체
+- `viewOption == null`이면 조회를 시작하지 않는다 → 기본값(월별)으로 한 번 그렸다가 연도별로 바뀌는 깜빡임 방지
+- 연도 모드도 `currentYearMonth`를 기준점으로 쓴다. 연도 모드의 ◀ ▶는 `±1년`, 월 모드로 돌아오면 기준점의 월을 보여준다.
+  - 예: 2026-11(월) → 연도 전환 → ◀ 2025년 → 월 전환 → 2025-11
+
+**Event / Effect**
+
+| 기존 | 변경 |
+|---|---|
+| `OnPreviousMonthClicked` / `OnNextMonthClicked` / `OnThisMonthClicked` | `OnPreviousClicked` / `OnNextClicked` / `OnCurrentClicked` — 단위에 따라 월/연 이동 |
+| `SelectMonth` | `SelectPeriod` |
+| `ShowSelectYearMonth(yearMonth)` | `ShowSelectYearMonth(yearMonth, showMonth)` |
+| `SortOderChanged` | 유지, ViewModel에서 `SetDiaryListSortOrderUseCase` 호출 |
+| - | `PeriodUnitChanged(unit)` → `SetDiaryListPeriodUnitUseCase` |
+
+**DiaryListViewModel.observeDiaries()**
+
+```kotlin
+viewState
+    .map { DiaryQuery(it.viewOption, it.currentYearMonth, it.currentPlant?.plantId) }
+    .distinctUntilChanged()
+    .filter { it.viewOption != null }
+    .flatMapLatest { q -> getDiariesUseCase(q.viewOption!!.periodUnit, q.yearMonth, q.viewOption.sortOrder, q.plantId) }
+```
+
+**PlantListViewModel**
+
+```kotlin
+// 변경 전
+private val _sortOrder = MutableStateFlow(PlantListSortOrder.CREATED_LATEST)
+is OnSortChanged -> _sortOrder.value = event.sortOrder
+
+// 변경 후
+private val sortOrder = getPlantListSortOrderUseCase()
+is OnSortChanged -> viewModelScope.launch { setPlantListSortOrderUseCase(event.sortOrder) }
+// observePlants()의 combine에서 _sortOrder → sortOrder
+```
+
+- 홈은 combine이 DataStore 첫 값을 받기 전까지 방출하지 않으므로 별도 null 처리 불필요.
+
+**Screen**
+
+- `TopBar(...)`: 3.2 크기 조정, 단위별 텍스트·contentDescription 분기
+- 새 파일 `DiaryListPeriodUnitToggle.kt` (Preview 포함)
+- `DiaryListSortFilter` 줄을 `Row(SpaceBetween)`로 바꿔 start에 토글, end에 정렬
+- 연도 모드 월 헤더: `diaries.groupBy { YearMonth.from(it.date) }` → 헤더 `item` + `items`
+
+### 4.8 strings (ko / en / ja)
+
+| key | 모듈 | ko | en | ja |
+|---|---|---|---|---|
+| `period_unit_month` | feature/plant | 월별 | Monthly | 月別 |
+| `period_unit_year` | feature/plant | 연도별 | Yearly | 年別 |
+| `this_year` | feature/plant | 올해 | This Year | 今年 |
+| `previous_year` | feature/plant | 이전 연도 | Previous Year | 前年 |
+| `next_year` | feature/plant | 다음 연도 | Next Year | 翌年 |
+| `select_year` | core/common_ui | 연도 선택 | Select Year | 年を選択 |
+
+## 5. 구현 순서
+
+1. `core/datastore` 모듈 + 버전 카탈로그 + DI
+2. domain: `DiaryListPeriodUnit`, `DiaryListViewOption`, `UserPreferenceRepository`, UseCase 5개
+3. domain/data: `GetDiariesUseCase`·`DiaryRepository`·`DiaryRepositoryImpl` 기간 시그니처 변경
+4. data: `UserPreferenceRepositoryImpl`, `@Binds` / app: `UseCaseModule`
+5. 홈 `PlantListViewModel` 정렬 유지
+6. 일기 탭 State / Event / ViewModel
+7. TopBar 크기 조정 + 단위별 분기
+8. 토글 Composable + 정렬 줄 배치
+9. `SelectYearMonthDialog`에 `showMonth` 추가
+10. 연도 모드 월 헤더
+11. strings 3개 언어
+12. 빌드 + 수동 확인 (재실행 후 3개 값 유지, 월↔연 전환 기준점, 빈 목록)
+
+## 6. 테스트 [제안]
+
+- `GetDiariesUseCase` 기간 계산: 월(30/31일, 윤년 2월), 연(1/1~12/31) — Repository를 fake로 두고 전달된 기간 검증
+- `toEnumOrDefault`: 값 없음 / 알 수 없는 이름 → 기본값
+- DataStore 자체, Compose UI는 테스트하지 않는다.

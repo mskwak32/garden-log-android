@@ -10,6 +10,7 @@ import com.mskwak.domain.usecase.export.GetExportedFilesUseCase
 import com.mskwak.domain.usecase.picture.DeletePictureUseCase
 import com.mskwak.domain.usecase.picture.SavePictureUseCase
 import com.mskwak.domain.usecase.plant.*
+import com.mskwak.domain.usecase.preference.*
 import com.mskwak.domain.usecase.task.*
 import com.mskwak.domain.usecase.watering.*
 import dagger.Module
@@ -337,5 +338,41 @@ class UseCaseModule {
     @Provides
     fun provideDeleteExportedFileUseCase(exportRepository: ExportRepository): DeleteExportedFileUseCase {
         return DeleteExportedFileUseCase(exportRepository)
+    }
+
+    /* Preference UseCases */
+    @Provides
+    fun provideGetPlantListSortOrderUseCase(
+        userPreferenceRepository: UserPreferenceRepository
+    ): GetPlantListSortOrderUseCase {
+        return GetPlantListSortOrderUseCase(userPreferenceRepository)
+    }
+
+    @Provides
+    fun provideSetPlantListSortOrderUseCase(
+        userPreferenceRepository: UserPreferenceRepository
+    ): SetPlantListSortOrderUseCase {
+        return SetPlantListSortOrderUseCase(userPreferenceRepository)
+    }
+
+    @Provides
+    fun provideGetDiaryListViewOptionUseCase(
+        userPreferenceRepository: UserPreferenceRepository
+    ): GetDiaryListViewOptionUseCase {
+        return GetDiaryListViewOptionUseCase(userPreferenceRepository)
+    }
+
+    @Provides
+    fun provideSetDiaryListSortOrderUseCase(
+        userPreferenceRepository: UserPreferenceRepository
+    ): SetDiaryListSortOrderUseCase {
+        return SetDiaryListSortOrderUseCase(userPreferenceRepository)
+    }
+
+    @Provides
+    fun provideSetDiaryListPeriodUnitUseCase(
+        userPreferenceRepository: UserPreferenceRepository
+    ): SetDiaryListPeriodUnitUseCase {
+        return SetDiaryListPeriodUnitUseCase(userPreferenceRepository)
     }
 }

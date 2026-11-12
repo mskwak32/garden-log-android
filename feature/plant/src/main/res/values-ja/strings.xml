@@ -14,6 +14,11 @@
     <string name="this_month">今月</string>
     <string name="previous_month">前月</string>
     <string name="next_month">次月</string>
+    <string name="this_year">今年</string>
+    <string name="previous_year">前年</string>
+    <string name="next_year">翌年</string>
+    <string name="period_unit_month">月別</string>
+    <string name="period_unit_year">年別</string>
     <string name="select_year_month">年/月を選択</string>
     <string name="year_format">%d年</string>
     <string name="month_format">%d月</string>

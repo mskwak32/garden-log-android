@@ -17,7 +17,7 @@ interface DiaryRepository {
         ascending: Boolean
     ): Flow<List<Diary>>
 
-    fun getDiaries(year: Int, month: Int, plantId: Int?): Flow<List<Diary>>
+    fun getDiaries(startDate: LocalDate, endDate: LocalDate, plantId: Int?): Flow<List<Diary>>
 
     suspend fun getDiariesByPlantIdAndDateRange(
         plantId: Int,

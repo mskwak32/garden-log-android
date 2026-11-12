@@ -23,6 +23,7 @@ domain/           # UseCase, Repository interfaces, Model (pure Kotlin)
 data/             # RepositoryImpl, Entity↔Domain Mapper, DI: RepositoryModule
 feature/plant/    # All screens, ViewModels, States (UI layer)
 core/database/    # Room DB (Entity, DAO, Migration), DI: DatabaseModule
+core/datastore/   # Preferences DataStore (sort orders, diary period unit), DI: DataStoreModule
 core/remote/      # Retrofit/OkHttp
 core/file/        # File management
 core/pdf/         # PDF generation (diary export)

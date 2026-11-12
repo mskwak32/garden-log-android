@@ -11,10 +11,14 @@ import com.mskwak.common_ui.R
 import com.mskwak.common_ui.theme.GardenLogTheme
 import java.time.YearMonth
 
+/**
+ * @param showMonth false면 연도만 선택한다. 이때 [onConfirm]의 월은 [initialYearMonth]의 월을 유지한다.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectYearMonthDialog(
     initialYearMonth: YearMonth,
+    showMonth: Boolean = true,
     onDismiss: () -> Unit,
     onConfirm: (YearMonth) -> Unit
 ) {
@@ -29,7 +33,9 @@ fun SelectYearMonthDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = stringResource(R.string.select_year_month),
+                text = stringResource(
+                    if (showMonth) R.string.select_year_month else R.string.select_year
+                ),
                 style = MaterialTheme.typography.titleLarge
             )
         },
@@ -47,15 +53,17 @@ fun SelectYearMonthDialog(
                         onItemSelected = { selectedYear = it },
                         itemLabel = { stringResource(R.string.year_format, it) }
                     )
-                    Spacer(Modifier.width(16.dp))
-                    YearMonthDropdown(
-                        modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.month),
-                        items = months,
-                        selectedItem = selectedMonth,
-                        onItemSelected = { selectedMonth = it },
-                        itemLabel = { stringResource(R.string.month_format, it) }
-                    )
+                    if (showMonth) {
+                        Spacer(Modifier.width(16.dp))
+                        YearMonthDropdown(
+                            modifier = Modifier.weight(1f),
+                            label = stringResource(R.string.month),
+                            items = months,
+                            selectedItem = selectedMonth,
+                            onItemSelected = { selectedMonth = it },
+                            itemLabel = { stringResource(R.string.month_format, it) }
+                        )
+                    }
                 }
             }
         },
@@ -126,6 +134,19 @@ private fun SelectYearMonthDialogPreview() {
     GardenLogTheme {
         SelectYearMonthDialog(
             initialYearMonth = YearMonth.of(2024, 6),
+            onDismiss = {},
+            onConfirm = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SelectYearDialogPreview() {
+    GardenLogTheme {
+        SelectYearMonthDialog(
+            initialYearMonth = YearMonth.of(2024, 6),
+            showMonth = false,
             onDismiss = {},
             onConfirm = {}
         )

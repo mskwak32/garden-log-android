@@ -76,10 +76,11 @@ internal class DiaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getDiaries(year: Int, month: Int, plantId: Int?): Flow<List<Diary>> {
-        val startDate = LocalDate.of(year, month, 1)
-        val endDate = startDate.withDayOfMonth(startDate.lengthOfMonth())
-
+    override fun getDiaries(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        plantId: Int?
+    ): Flow<List<Diary>> {
         val diariesFlow = if (plantId == null) {
             diaryDao.getDiaries(startDate, endDate)
         } else {

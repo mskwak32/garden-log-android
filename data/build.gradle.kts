@@ -34,6 +34,7 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":core:database"))
+    implementation(project(":core:datastore"))
     implementation(project(":core:remote"))
     implementation(project(":core:file"))
     implementation(project(":core:pdf"))

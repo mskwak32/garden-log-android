@@ -9,6 +9,8 @@ import com.mskwak.common_ui.base.BaseViewModel
 import com.mskwak.domain.model.Plant
 import com.mskwak.domain.model.PlantListSortOrder
 import com.mskwak.domain.usecase.plant.GetPlantsWithSortOrderUseCase
+import com.mskwak.domain.usecase.preference.GetPlantListSortOrderUseCase
+import com.mskwak.domain.usecase.preference.SetPlantListSortOrderUseCase
 import com.mskwak.domain.usecase.task.GetNearestTaskDueDatesUseCase
 import com.mskwak.domain.usecase.watering.GetWateringDaysUseCase
 import com.mskwak.domain.usecase.watering.WateringNowUseCase
@@ -21,8 +23,10 @@ import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -30,13 +34,17 @@ import java.time.temporal.ChronoUnit
 @HiltViewModel
 class PlantListViewModel @Inject constructor(
     private val getPlantsWithSortOrderUseCase: GetPlantsWithSortOrderUseCase,
+    getPlantListSortOrderUseCase: GetPlantListSortOrderUseCase,
+    private val setPlantListSortOrderUseCase: SetPlantListSortOrderUseCase,
     private val getWateringDaysUseCase: GetWateringDaysUseCase,
     private val getNearestTaskDueDatesUseCase: GetNearestTaskDueDatesUseCase,
     private val wateringNowUseCase: WateringNowUseCase,
     private val analyticsLogger: AnalyticsLogger
 ) : BaseViewModel<PlantListState, PlantListEvent, PlantListEffect>() {
     private val pendingWatering = mutableSetOf<Int>()
-    private val _sortOrder = MutableStateFlow(PlantListSortOrder.CREATED_LATEST)
+    // DataStore에 저장된 정렬 순서. combine에서 두 번 구독하므로 공유한다.
+    private val sortOrder = getPlantListSortOrderUseCase()
+        .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
     private val _selectedTab = MutableStateFlow(PlantListTab.MY_GARDEN)
 
     init {
@@ -59,7 +67,7 @@ class PlantListViewModel @Inject constructor(
             }
 
             is PlantListEvent.OnSortChanged -> {
-                _sortOrder.value = event.sortOrder
+                viewModelScope.launch { setPlantListSortOrderUseCase(event.sortOrder) }
             }
 
             is PlantListEvent.Watering -> {
@@ -77,8 +85,8 @@ class PlantListViewModel @Inject constructor(
     private fun observePlants() {
         viewModelScope.launch {
             combine(
-                _sortOrder.flatMapLatest { getPlantsWithSortOrderUseCase(it) },
-                _sortOrder,
+                sortOrder.flatMapLatest { getPlantsWithSortOrderUseCase(it) },
+                sortOrder,
                 _selectedTab,
                 getNearestTaskDueDatesUseCase()
             ) { plants, order, tab, taskDueDates ->

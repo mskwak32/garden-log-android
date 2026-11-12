@@ -1,14 +1,11 @@
 package com.mskwak.plant.diary_list
 
 import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,42 +45,36 @@ fun DiaryListSortFilter(
         }
     }
 
-    Box(modifier = modifier.fillMaxWidth()) {
-        Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .border(
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .clickable { expanded = true }
-                    .padding(8.dp)
-            ) {
-                Text(
-                    text = getSortText(currentSortOrder),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+    Box(modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { expanded = true }
+                .padding(8.dp)
+        ) {
+            Text(
+                text = getSortText(currentSortOrder),
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-                Spacer(Modifier.width(4.dp))
-                Image(
-                    imageVector = IconPack.CaretDown,
-                    contentDescription = stringResource(R.string.sort)
-                )
-            }
-
-            AppDropDownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                items = DiaryListSortOrder.entries,
-                selectedItem = currentSortOrder,
-                itemText = { getSortText(it) },
-                onItemClick = {
-                    onEvent(DiaryListEvent.SortOderChanged(it))
-                }
+            Spacer(Modifier.width(4.dp))
+            Image(
+                imageVector = IconPack.CaretDown,
+                contentDescription = stringResource(R.string.sort)
             )
         }
+
+        AppDropDownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            items = DiaryListSortOrder.entries,
+            selectedItem = currentSortOrder,
+            itemText = { getSortText(it) },
+            onItemClick = {
+                onEvent(DiaryListEvent.SortOderChanged(it))
+            }
+        )
     }
 }
 

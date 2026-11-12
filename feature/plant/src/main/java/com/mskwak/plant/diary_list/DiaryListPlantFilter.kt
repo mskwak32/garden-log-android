@@ -102,7 +102,7 @@ private fun FilterChip(
         Modifier
     } else {
         Modifier.border(
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             shape = RoundedCornerShape(50)
         )
     }

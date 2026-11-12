@@ -38,4 +38,8 @@ internal abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindExportRepository(impl: ExportRepositoryImpl): ExportRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserPreferenceRepository(impl: UserPreferenceRepositoryImpl): UserPreferenceRepository
 }
