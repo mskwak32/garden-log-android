@@ -18,3 +18,4 @@ local.properties
 google-services.json
 app/release/
 firebase-debug.log
+gradle/gradle-daemon-jvm.properties
