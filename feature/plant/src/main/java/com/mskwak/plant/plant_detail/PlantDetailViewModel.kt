@@ -49,6 +49,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -88,6 +89,7 @@ class PlantDetailViewModel @AssistedInject constructor(
 
     init {
         analyticsLogger.log(GardenEvent.ScreenView("plant_detail"))
+        checkPlantExists()
         observePlant()
         observeWateringDates()
         observeTasks()
@@ -95,6 +97,17 @@ class PlantDetailViewModel @AssistedInject constructor(
     }
 
     override fun setInitialState(): PlantDetailState = PlantDetailState()
+
+    // 알림 이후 삭제된 식물로 진입한 경우 목록으로 되돌린다.
+    // 첫 값만 확인해 상세 화면에서 직접 삭제할 때의 흐름과 겹치지 않게 한다.
+    private fun checkPlantExists() {
+        viewModelScope.launch {
+            if (getPlantUseCase(plantId).first() == null) {
+                setEffect(PlantDetailEffect.ShowSnackbar(R.string.message_plant_not_found))
+                setEffect(PlantDetailEffect.Navigation.Back)
+            }
+        }
+    }
 
     private fun observePlant(): Job {
         return combine(

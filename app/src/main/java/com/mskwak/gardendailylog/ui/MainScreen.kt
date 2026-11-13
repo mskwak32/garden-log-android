@@ -59,6 +59,7 @@ import com.mskwak.gardendailylog.R
 import com.mskwak.gardendailylog.ui.bottom_nav.BottomNavItem
 import com.mskwak.gardendailylog.ui.dialog.ForceUpdateDialog
 import com.mskwak.plant.plantNavGraph
+import com.mskwak.plant.plant_detail.PlantDetailNavKey
 import com.mskwak.plant.plant_list.PlantListNavKey
 import com.mskwak.setting.settingNavGraph
 import kotlinx.coroutines.launch
@@ -66,6 +67,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(),
+    initialPlantId: Int? = null,
     openAppSetting: () -> Unit
 ) {
     val isForceUpdateRequired by viewModel.isForceUpdateRequired.collectAsStateWithLifecycle()
@@ -77,7 +79,12 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Navigation 3: 단일 백스택 사용
-    val backStack = rememberNavBackStack(BottomNavItem.PlantList.screen)
+    // 알림으로 진입한 경우 홈 위에 식물 상세 화면을 쌓음 (재생성 시에는 저장된 상태 우선)
+    val initialKeys = buildList<NavKey> {
+        add(BottomNavItem.PlantList.screen)
+        initialPlantId?.let { add(PlantDetailNavKey(it)) }
+    }
+    val backStack = rememberNavBackStack(*initialKeys.toTypedArray())
 
     // 현재 화면이 탭 메뉴인지 확인
     val currentScreen = backStack.lastOrNull()

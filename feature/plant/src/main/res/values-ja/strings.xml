@@ -60,6 +60,7 @@
     <string name="watering_alarm">リマインダー時刻</string>
     <string name="watering_icon_description">水やり記録あり</string>
 
+    <string name="message_plant_not_found">削除された植物です。</string>
     <string name="message_input_required_field">必須項目を入力してください。</string>
     <string name="message_no_more_picture">これ以上画像を追加できません。</string>
     <string name="message_input_picture_or_content">写真または内容を入力してください。</string>

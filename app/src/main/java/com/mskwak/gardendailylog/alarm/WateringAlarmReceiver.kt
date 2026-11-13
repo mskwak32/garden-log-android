@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
 import com.mskwak.domain.usecase.plant.GetPlantNameUseCase
 import com.mskwak.domain.usecase.watering.SetWateringAlarmUseCase
 import com.mskwak.gardendailylog.MainActivity
@@ -68,7 +69,7 @@ class WateringAlarmReceiver : BroadcastReceiver() {
                         context.getString(R.string.noti_watering_message, it)
                     } ?: ""
                 )
-                .setContentIntent(getPendingIntent(context))
+                .setContentIntent(getPendingIntent(context, plantId))
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
                 .setGroup(WATERING_GROUP_KEY)
@@ -92,13 +93,16 @@ class WateringAlarmReceiver : BroadcastReceiver() {
             .build()
     }
 
-    private fun getPendingIntent(context: Context): PendingIntent {
+    private fun getPendingIntent(context: Context, plantId: Int): PendingIntent {
         return PendingIntent.getActivity(
             context,
-            0,
-            Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            },
+            plantId,
+            // 식물별로 고유한 data URI/requestCode를 써서 알림끼리 PendingIntent가 덮어써지지 않게 함
+            MainActivity.createPlantDetailIntent(
+                context,
+                plantId,
+                "gardenlog://notification/watering/$plantId".toUri()
+            ),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }

@@ -60,6 +60,7 @@
     <string name="watering_alarm">Reminder Time</string>
     <string name="watering_icon_description">Watering recorded</string>
 
+    <string name="message_plant_not_found">This plant has been deleted.</string>
     <string name="message_input_required_field">Please fill in all required fields.</string>
     <string name="message_no_more_picture">No more images can be added.</string>
     <string name="message_input_picture_or_content">Please add a photo or content.</string>

@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
 import com.mskwak.domain.repository.PlantTaskRepository
 import com.mskwak.domain.usecase.plant.GetPlantNameUseCase
 import com.mskwak.domain.usecase.task.SetPlantTaskAlarmUseCase
@@ -44,7 +45,7 @@ class PlantTaskAlarmReceiver : BroadcastReceiver() {
             val task = plantTaskRepository.getTask(taskId) ?: return@launch
             val plantName = getPlantNameUseCase.getName(task.plantId)
 
-            showNotification(context, plantName, task.title, taskId)
+            showNotification(context, plantName, task.title, taskId, task.plantId)
             setPlantTaskAlarmUseCase(taskId, true)
         }
     }
@@ -64,7 +65,8 @@ class PlantTaskAlarmReceiver : BroadcastReceiver() {
         context: Context,
         plantName: String?,
         taskTitle: String,
-        taskId: Int
+        taskId: Int,
+        plantId: Int
     ) {
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -75,7 +77,7 @@ class PlantTaskAlarmReceiver : BroadcastReceiver() {
                 .setSmallIcon(R.drawable.ic_leaf)
                 .setContentTitle(context.getString(R.string.noti_task_title, plantName.orEmpty()))
                 .setContentText(taskTitle)
-                .setContentIntent(getPendingIntent(context))
+                .setContentIntent(getPendingIntent(context, plantId, taskId))
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
                 .setGroup(TASK_GROUP_KEY)
@@ -100,13 +102,16 @@ class PlantTaskAlarmReceiver : BroadcastReceiver() {
             .build()
     }
 
-    private fun getPendingIntent(context: Context): PendingIntent {
+    private fun getPendingIntent(context: Context, plantId: Int, taskId: Int): PendingIntent {
         return PendingIntent.getActivity(
             context,
-            0,
-            Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            },
+            taskId,
+            // 할일별로 고유한 data URI/requestCode를 써서 알림끼리 PendingIntent가 덮어써지지 않게 함
+            MainActivity.createPlantDetailIntent(
+                context,
+                plantId,
+                "gardenlog://notification/task/$taskId".toUri()
+            ),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
