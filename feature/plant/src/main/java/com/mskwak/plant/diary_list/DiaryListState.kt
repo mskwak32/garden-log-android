@@ -7,7 +7,7 @@ import com.mskwak.common_ui.ViewState
 import com.mskwak.domain.model.DiaryListPeriodUnit
 import com.mskwak.domain.model.DiaryListSortOrder
 import com.mskwak.domain.model.DiaryListViewOption
-import com.mskwak.plant.model.DiaryListItemUiModel
+import com.mskwak.plant.model.DiaryListDayUiModel
 import java.time.YearMonth
 
 /**
@@ -20,7 +20,7 @@ data class DiaryListState(
     val currentYearMonth: YearMonth = YearMonth.now(),
     val currentPlant: DiaryListPlantFilterUiModel? = null,
     val plantFilterList: List<DiaryListPlantFilterUiModel> = emptyList(),
-    val diaries: List<DiaryListItemUiModel> = emptyList()
+    val days: List<DiaryListDayUiModel> = emptyList()
 ) : ViewState {
     val periodUnit: DiaryListPeriodUnit
         get() = viewOption?.periodUnit ?: DiaryListPeriodUnit.MONTH
@@ -39,6 +39,7 @@ sealed interface DiaryListEvent : ViewEvent {
     data object OnPreviousPeriodClicked : DiaryListEvent
     data object SelectPeriod : DiaryListEvent
     data class OnDiaryClicked(val diaryId: Int) : DiaryListEvent
+    data class OnTaskClicked(val title: String, val content: String) : DiaryListEvent
 }
 
 sealed interface DiaryListEffect : ViewEffect {
@@ -50,4 +51,6 @@ sealed interface DiaryListEffect : ViewEffect {
         val yearMonth: YearMonth,
         val showMonth: Boolean
     ) : DiaryListEffect
+
+    data class ShowTaskDialog(val title: String, val content: String) : DiaryListEffect
 }

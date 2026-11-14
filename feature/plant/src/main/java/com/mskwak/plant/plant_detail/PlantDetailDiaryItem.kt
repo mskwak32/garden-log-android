@@ -28,14 +28,14 @@ import coil3.compose.AsyncImage
 import com.mskwak.common_ui.theme.GardenLogTheme
 import com.mskwak.common_ui.util.toDateWithDayOfWeek
 import com.mskwak.plant.R
-import com.mskwak.plant.model.DiaryListItemUiModel
+import com.mskwak.plant.model.DiarySummaryUiModel
 import java.time.LocalDate
 
 @Composable
 fun PlantDetailDiaryItem(
     modifier: Modifier = Modifier,
-    diary: DiaryListItemUiModel,
-    onClick: (DiaryListItemUiModel) -> Unit
+    diary: DiarySummaryUiModel,
+    onClick: (DiarySummaryUiModel) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -102,7 +102,7 @@ fun PlantDetailDiaryItem(
 private fun PlantDetailDiaryItemPreview() {
     GardenLogTheme {
         PlantDetailDiaryItem(
-            diary = DiaryListItemUiModel(
+            diary = DiarySummaryUiModel(
                 id = 0,
                 date = LocalDate.now(),
                 content = "content",

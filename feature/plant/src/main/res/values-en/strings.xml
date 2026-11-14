@@ -74,6 +74,7 @@
 
     <string name="diary_list_empty_with_plantName">No diary entries for %s yet</string>
     <string name="diary_list_empty">No diary entries found</string>
+    <string name="diary_list_record_empty">No records yet</string>
     <string name="diary_content_hint">Enter content here.</string>
     <string name="diary_content_empty">No content recorded.</string>
     <string name="message_discard_confirm">Your unsaved content will be discarded.</string>

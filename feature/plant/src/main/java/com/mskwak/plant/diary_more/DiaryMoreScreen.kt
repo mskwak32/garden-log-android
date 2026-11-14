@@ -58,9 +58,7 @@ import com.mskwak.common_ui.theme.GardenLogTheme
 import com.mskwak.common_ui.ui_component.AppDropDownMenu
 import com.mskwak.domain.model.DiaryListSortOrder
 import com.mskwak.plant.R
-import com.mskwak.plant.diary_list.DiaryListEvent
-import com.mskwak.plant.diary_list.DiaryListItem
-import com.mskwak.plant.model.DiaryListItemUiModel
+import com.mskwak.plant.model.DiarySummaryUiModel
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -181,24 +179,20 @@ private fun DiaryList(
             items = state.diaries,
             key = { item ->
                 when (item) {
-                    is DiaryMoreListItem.MonthHeader -> "header_${item.yearMonth}"
-                    is DiaryMoreListItem.DiaryItem -> "diary_${item.diary.id}"
+                    is DiaryMoreListItemUiModel.MonthHeader -> "header_${item.yearMonth}"
+                    is DiaryMoreListItemUiModel.DiaryItem -> "diary_${item.diary.id}"
                 }
             }
         ) { item ->
             when (item) {
-                is DiaryMoreListItem.MonthHeader -> {
+                is DiaryMoreListItemUiModel.MonthHeader -> {
                     MonthHeader(yearMonth = item.yearMonth)
                 }
 
-                is DiaryMoreListItem.DiaryItem -> {
-                    DiaryListItem(
+                is DiaryMoreListItemUiModel.DiaryItem -> {
+                    DiaryMoreListItem(
                         diary = item.diary,
-                        onEvent = { event ->
-                            if (event is DiaryListEvent.OnDiaryClicked) {
-                                onEvent(DiaryMoreEvent.OnDiaryClicked(event.diaryId))
-                            }
-                        }
+                        onClick = { onEvent(DiaryMoreEvent.OnDiaryClicked(it)) }
                     )
                 }
             }
@@ -332,21 +326,21 @@ private fun PreviewContent() {
         Content(
             state = DiaryMoreState(
                 plantName = "몬스테라",
-                diaries = buildDiaryListItems(
+                diaries = buildDiaryMoreListItems(
                     listOf(
-                        DiaryListItemUiModel(
+                        DiarySummaryUiModel(
                             id = 1,
                             date = now,
                             content = "오늘 물을 주었다.",
                             imagePath = null
                         ),
-                        DiaryListItemUiModel(
+                        DiarySummaryUiModel(
                             id = 2,
                             date = now.minusDays(5),
                             content = "새 잎이 나왔다.",
                             imagePath = null
                         ),
-                        DiaryListItemUiModel(
+                        DiarySummaryUiModel(
                             id = 3,
                             date = now.minusMonths(1),
                             content = "분갈이를 했다.",

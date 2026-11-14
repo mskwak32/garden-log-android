@@ -18,6 +18,14 @@ interface WateringLogDao {
     @Query("SELECT MAX(date) FROM watering_log WHERE plantId = :plantId")
     suspend fun getLatestWateringDate(plantId: Int): LocalDate?
 
+    // plantId가 null이면 전체 식물
+    @Query("SELECT * FROM watering_log WHERE date BETWEEN :startDate AND :endDate AND (:plantId IS NULL OR plantId = :plantId) ORDER BY date, id")
+    fun observeWateringLogsByRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        plantId: Int?
+    ): kotlinx.coroutines.flow.Flow<List<WateringLogEntity>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertWateringLog(entity: WateringLogEntity)
 

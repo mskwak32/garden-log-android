@@ -8,12 +8,12 @@ import com.mskwak.common_ui.base.BaseViewModel
 import com.mskwak.domain.model.DiaryListPeriodUnit
 import com.mskwak.domain.model.DiaryListViewOption
 import com.mskwak.domain.model.PlantListSortOrder
-import com.mskwak.domain.usecase.diary.GetDiariesUseCase
+import com.mskwak.domain.usecase.diary.GetDiaryListDaysUseCase
 import com.mskwak.domain.usecase.plant.GetPlantsWithSortOrderUseCase
 import com.mskwak.domain.usecase.preference.GetDiaryListViewOptionUseCase
 import com.mskwak.domain.usecase.preference.SetDiaryListPeriodUnitUseCase
 import com.mskwak.domain.usecase.preference.SetDiaryListSortOrderUseCase
-import com.mskwak.plant.model.toDiaryListItemUiModel
+import com.mskwak.plant.model.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiaryListViewModel @Inject constructor(
-    private val getDiariesUseCase: GetDiariesUseCase,
+    private val getDiaryListDaysUseCase: GetDiaryListDaysUseCase,
     private val getPlantsWithSortOrderUseCase: GetPlantsWithSortOrderUseCase,
     private val getDiaryListViewOptionUseCase: GetDiaryListViewOptionUseCase,
     private val setDiaryListPeriodUnitUseCase: SetDiaryListPeriodUnitUseCase,
@@ -65,7 +65,7 @@ class DiaryListViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeDiaries() {
         // viewOption이 null이면 조회하지 않는다. 기본값(월별)으로 그렸다가 바뀌는 깜빡임 방지
-        val diariesFlow = viewState
+        val daysFlow = viewState
             .mapNotNull { state ->
                 state.viewOption?.let { option ->
                     DiaryQuery(option, state.currentYearMonth, state.currentPlant?.plantId)
@@ -73,7 +73,7 @@ class DiaryListViewModel @Inject constructor(
             }
             .distinctUntilChanged()
             .flatMapLatest { query ->
-                getDiariesUseCase(
+                getDiaryListDaysUseCase(
                     periodUnit = query.viewOption.periodUnit,
                     yearMonth = query.yearMonth,
                     sortOrder = query.viewOption.sortOrder,
@@ -83,20 +83,18 @@ class DiaryListViewModel @Inject constructor(
 
         // plantFilterList가 나중에 로드되더라도 식물 이름이 반영되도록 combine 사용
         combine(
-            diariesFlow,
+            daysFlow,
             viewState.map { it.plantFilterList }.distinctUntilChanged()
-        ) { diaries, plantFilterList ->
+        ) { days, plantFilterList ->
             val plantMap = plantFilterList.associateBy { it.plantId }
-            diaries.map { diary ->
-                val plant = plantMap[diary.plantId]
-                diary.toDiaryListItemUiModel(
-                    plantName = plant?.plantName,
-                    isHarvested = plant?.isHarvested ?: false
-                )
+            days.map { day ->
+                day.toUiModel { plantId ->
+                    plantMap[plantId]?.let { it.plantName to it.isHarvested }
+                }
             }
         }
-            .onEach { mappedDiaries ->
-                setState { copy(diaries = mappedDiaries) }
+            .onEach { mappedDays ->
+                setState { copy(days = mappedDays) }
             }
             .launchIn(viewModelScope)
     }
@@ -145,6 +143,10 @@ class DiaryListViewModel @Inject constructor(
 
             is DiaryListEvent.OnDiaryClicked -> {
                 setEffect(DiaryListEffect.Navigation.GoToDiaryDetail(event.diaryId))
+            }
+
+            is DiaryListEvent.OnTaskClicked -> {
+                setEffect(DiaryListEffect.ShowTaskDialog(event.title, event.content))
             }
         }
     }

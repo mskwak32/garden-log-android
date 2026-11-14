@@ -5,7 +5,7 @@ import com.mskwak.common_ui.ViewEffect
 import com.mskwak.common_ui.ViewEvent
 import com.mskwak.common_ui.ViewState
 import com.mskwak.domain.model.PlantTaskType
-import com.mskwak.plant.model.DiaryListItemUiModel
+import com.mskwak.plant.model.DiarySummaryUiModel
 import com.mskwak.plant.model.PlantTaskUiModel
 import com.mskwak.plant.model.WateringStatus
 import java.time.LocalDate
@@ -23,7 +23,7 @@ data class PlantDetailState(
     val wateringAlarmTime: LocalTime? = null,
     val isWateringActive: Boolean = false,
     val memo: String? = null,
-    val diaries: List<DiaryListItemUiModel> = emptyList(),
+    val diaries: List<DiarySummaryUiModel> = emptyList(),
     val harvestDate: LocalDate? = null,
     val harvestMemo: String? = null,
     val isHarvestSectionExpanded: Boolean = false,

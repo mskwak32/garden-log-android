@@ -304,6 +304,15 @@ class UseCaseModule {
     }
 
     @Provides
+    fun provideGetDiaryListDaysUseCase(
+        diaryRepository: DiaryRepository,
+        plantTaskRepository: PlantTaskRepository,
+        wateringLogRepository: WateringLogRepository
+    ): GetDiaryListDaysUseCase {
+        return GetDiaryListDaysUseCase(diaryRepository, plantTaskRepository, wateringLogRepository)
+    }
+
+    @Provides
     fun provideUpdateDiaryUseCase(
         diaryRepository: DiaryRepository
     ): UpdateDiaryUseCase {

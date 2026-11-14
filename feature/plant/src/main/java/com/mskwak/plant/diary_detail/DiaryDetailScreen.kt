@@ -35,7 +35,7 @@ import com.mskwak.common_ui.theme.TaskBrownText
 import com.mskwak.common_ui.ui_component.AppDropDownMenu
 import com.mskwak.common_ui.ui_component.PagerDotIndicator
 import com.mskwak.common_ui.ui_component.TextBadge
-import com.mskwak.common_ui.util.toDateString
+import com.mskwak.common_ui.util.toDateWithDayOfWeekLong
 import com.mskwak.plant.R
 import com.mskwak.plant.dialog.ImageZoomDialog
 import java.time.LocalDate
@@ -110,7 +110,7 @@ private fun Content(
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 Text(
-                    text = state.diaryDate.toDateString(),
+                    text = state.diaryDate.toDateWithDayOfWeekLong(),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

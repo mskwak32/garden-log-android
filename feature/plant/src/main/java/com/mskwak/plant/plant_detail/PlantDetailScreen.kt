@@ -46,7 +46,7 @@ import com.mskwak.domain.Constants
 import com.mskwak.plant.R
 import com.mskwak.plant.dialog.ExactAlarmPermissionDialog
 import com.mskwak.plant.dialog.ImageZoomDialog
-import com.mskwak.plant.model.DiaryListItemUiModel
+import com.mskwak.plant.model.DiarySummaryUiModel
 import com.mskwak.plant.model.WateringStatus
 import java.time.LocalDate
 import java.time.LocalTime
@@ -841,7 +841,7 @@ private fun HarvestSection(
 private fun DiarySection(
     modifier: Modifier = Modifier,
     plantName: String,
-    diaryList: List<DiaryListItemUiModel>,
+    diaryList: List<DiarySummaryUiModel>,
     onEvent: (PlantDetailEvent) -> Unit,
 ) {
     Column(
@@ -970,13 +970,13 @@ private fun PreviewDiarySection() {
     val now = LocalDate.now()
     val diaryList =
         listOf(
-            DiaryListItemUiModel(
+            DiarySummaryUiModel(
                 id = 1,
                 date = now,
                 content = "오늘은 물을 주었습니다. 새 싹이 나기 시작했어요.",
                 imagePath = null,
             ),
-            DiaryListItemUiModel(
+            DiarySummaryUiModel(
                 id = 2,
                 date = now.minusDays(4),
                 content = "햇빛이 잘 드는 곳으로 옮겨주었습니다.",

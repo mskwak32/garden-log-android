@@ -25,10 +25,13 @@ data class PlantTask(
     val isDoneToday: Boolean = false
 )
 
-// 할일 삭제 후에도 표시할 수 있도록 완료 시점의 제목을 함께 보관
+// 할일 삭제 후에도 표시할 수 있도록 완료 시점의 제목과 내용을 함께 보관
 data class PlantTaskLog(
     val plantId: Int,
     val taskId: Int?,
     val title: String,
-    val date: LocalDate
+    val date: LocalDate,
+    val content: String? = null,
+    // 목록 키로 사용
+    val id: Int = 0
 )

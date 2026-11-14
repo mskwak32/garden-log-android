@@ -74,6 +74,7 @@
 
     <string name="diary_list_empty_with_plantName">%sの日記がまだありません</string>
     <string name="diary_list_empty">該当する日記がありません</string>
+    <string name="diary_list_record_empty">記録がありません</string>
     <string name="diary_content_hint">内容を入力してください。</string>
     <string name="diary_content_empty">記録された内容がありません。</string>
     <string name="message_discard_confirm">作成中の内容が削除されます。</string>

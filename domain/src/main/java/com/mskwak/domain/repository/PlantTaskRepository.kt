@@ -38,6 +38,15 @@ interface PlantTaskRepository {
         endDate: LocalDate
     ): List<PlantTaskLog>
 
+    /**
+     * @param plantId null이면 전체 식물
+     */
+    fun observeTaskLogsByRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        plantId: Int?
+    ): Flow<List<PlantTaskLog>>
+
     suspend fun getActiveAlarmTaskIds(): List<Int>
     suspend fun getTaskIdsByPlantId(plantId: Int): List<Int>
     suspend fun updateAlarmActivation(taskId: Int, isActive: Boolean)

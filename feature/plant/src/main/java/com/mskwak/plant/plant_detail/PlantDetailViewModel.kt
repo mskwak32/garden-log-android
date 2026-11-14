@@ -31,7 +31,7 @@ import com.mskwak.domain.usecase.watering.UpdateWateringAlarmActivationUseCase
 import com.mskwak.domain.usecase.watering.UpdateWateringLogUseCase
 import com.mskwak.domain.usecase.watering.WateringUpdateResult
 import com.mskwak.plant.R
-import com.mskwak.plant.model.toDiaryListItemUiModel
+import com.mskwak.plant.model.toDiarySummaryUiModel
 import com.mskwak.plant.model.toPlantListItemUiModel
 import com.mskwak.plant.model.toPlantTaskUiModel
 import com.mskwak.plant.util.canScheduleExactAlarms
@@ -132,7 +132,7 @@ class PlantDetailViewModel @AssistedInject constructor(
                     wateringAlarmTime = if (plant.waterPeriod == 0) null else plant.wateringAlarm.time,
                     isWateringActive = plant.wateringAlarm.isActive,
                     memo = plant.memo,
-                    diaries = diaries.map { it.toDiaryListItemUiModel() },
+                    diaries = diaries.map { it.toDiarySummaryUiModel() },
                     harvestDate = plant.harvestDate,
                     harvestMemo = plant.harvestMemo
                 )

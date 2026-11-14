@@ -10,7 +10,7 @@ import com.mskwak.domain.model.DiaryListSortOrder
 data class DiaryMoreState(
     val plantName: String = "",
     val sortOrder: DiaryListSortOrder = DiaryListSortOrder.CREATED_LATEST,
-    val diaries: List<DiaryMoreListItem> = emptyList(),
+    val diaries: List<DiaryMoreListItemUiModel> = emptyList(),
     val isLoading: Boolean = false,
     val hasMore: Boolean = true
 ) : ViewState

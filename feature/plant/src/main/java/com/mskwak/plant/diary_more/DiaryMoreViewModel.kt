@@ -9,7 +9,7 @@ import com.mskwak.domain.Constants
 import com.mskwak.domain.model.DiaryListSortOrder
 import com.mskwak.domain.usecase.diary.GetDiariesByPlantIdUseCase
 import com.mskwak.domain.usecase.plant.GetPlantNameUseCase
-import com.mskwak.plant.model.toDiaryListItemUiModel
+import com.mskwak.plant.model.toDiarySummaryUiModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -92,13 +92,13 @@ class DiaryMoreViewModel @AssistedInject constructor(
                 page = page,
                 ascending = ascending
             ).firstOrNull() ?: emptyList()
-            val uiModels = diaries.map { it.toDiaryListItemUiModel() }
+            val uiModels = diaries.map { it.toDiarySummaryUiModel() }
             // 페이지 연결 시 같은 달의 MonthHeader가 중복 생성되지 않도록 이전 페이지 마지막 달을 전달
             val previousYearMonth = if (page == 0) null else {
-                viewState.value.diaries.filterIsInstance<DiaryMoreListItem.DiaryItem>()
+                viewState.value.diaries.filterIsInstance<DiaryMoreListItemUiModel.DiaryItem>()
                     .lastOrNull()?.diary?.date?.let { YearMonth.from(it) }
             }
-            val newItems = buildDiaryListItems(uiModels, previousYearMonth)
+            val newItems = buildDiaryMoreListItems(uiModels, previousYearMonth)
 
             currentPage = page
             setState {

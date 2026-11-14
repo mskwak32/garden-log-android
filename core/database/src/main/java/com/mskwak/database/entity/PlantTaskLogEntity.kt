@@ -18,5 +18,6 @@ data class PlantTaskLogEntity(
     val plantId: Int,
     val taskId: Int?,
     val title: String,
-    val date: LocalDate
+    val date: LocalDate,
+    val content: String? = null
 )

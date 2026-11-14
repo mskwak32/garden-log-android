@@ -90,6 +90,14 @@ interface PlantTaskDao {
         endDate: LocalDate
     ): List<PlantTaskLogEntity>
 
+    // plantId가 null이면 전체 식물
+    @Query("SELECT * FROM plant_task_log WHERE date BETWEEN :startDate AND :endDate AND (:plantId IS NULL OR plantId = :plantId) ORDER BY date, id")
+    fun observeTaskLogsByRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        plantId: Int?
+    ): Flow<List<PlantTaskLogEntity>>
+
     @Query("DELETE FROM plant_task_log WHERE plantId = :plantId")
     suspend fun deleteTaskLogsByPlantId(plantId: Int)
 }

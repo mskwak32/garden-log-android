@@ -25,7 +25,7 @@
 
 - `PAGE_SIZE` 단위로 페이지 로드, 스크롤 끝 도달 시 다음 페이지 자동 로드
 - 정렬 변경 시 목록 초기화 후 첫 페이지부터 재로드
-- 항목 간 월이 바뀔 경우 연도.월 구분 헤더(`DiaryMoreListItem.MonthHeader`) 삽입
+- 항목 간 월이 바뀔 경우 연도.월 구분 헤더(`DiaryMoreListItemUiModel.MonthHeader`) 삽입
 - 항목 클릭 → `DiaryDetailScreen`으로 이동
 
 ### 빈 상태
@@ -42,7 +42,7 @@
 
 ## 참고
 
-- `DiaryMoreListItem`: `MonthHeader` / `DiaryItem` sealed interface, `buildDiaryListItems()`로 생성 (
+- `DiaryMoreListItemUiModel`: `MonthHeader` / `DiaryItem` sealed interface, `buildDiaryMoreListItems()`로 생성 (
   `DiaryMoreListItem.kt`)
 - `GetDiariesByPlantIdUseCase`: `limit`, `page`, `ascending` 파라미터로 페이지네이션 및 정렬 지원
 - **Navigation 3**: `savedStateHandle` 사용 금지, `@AssistedInject` +

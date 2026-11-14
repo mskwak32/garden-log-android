@@ -80,7 +80,7 @@ entry<FooNavKey> {
 - Compose BOM 2026.03.01, Material 3
 - AGP 9.1.1, compileSdk 37/minSdk 29
 - Hilt 2.59.2, KSP
-- Room 2.8.4 (DB v8; migrations required for schema changes)
+- Room 2.8.4 (DB v10; migrations required for schema changes)
 - Navigation 3 1.1.0
 - Retrofit 3.0.0, OkHttp 5.3.2, Kotlin Serialization
 - Coil 3.4.0, Lottie 6.7.1
@@ -99,5 +99,5 @@ entry<FooNavKey> {
 
 ## Database
 
-`garden.db` (Room v8) — `PlantEntity`, `DiaryEntity`, `PictureEntity`, `DiaryPictureCrossRef`, `WateringLogEntity`
+`garden.db` (Room v10) — `PlantEntity`, `DiaryEntity`, `PictureEntity`, `DiaryPictureCrossRef`, `WateringLogEntity`, `PlantTaskEntity`, `PlantTaskLogEntity`
 Migrations: `core/database/migration/`, schema export enabled

@@ -7,6 +7,7 @@ import com.mskwak.database.entity.PlantEntity
 import com.mskwak.database.entity.PlantTaskEntity
 import com.mskwak.database.entity.PlantTaskLogEntity
 import com.mskwak.database.entity.PlantTaskWithDone
+import com.mskwak.database.entity.WateringLogEntity
 import com.mskwak.domain.model.Alarm
 import com.mskwak.domain.model.Diary
 import com.mskwak.domain.model.Picture
@@ -14,6 +15,7 @@ import com.mskwak.domain.model.Plant
 import com.mskwak.domain.model.PlantTask
 import com.mskwak.domain.model.PlantTaskLog
 import com.mskwak.domain.model.PlantTaskType
+import com.mskwak.domain.model.WateringLog
 
 internal fun Plant.toPlantEntity(pictureId: Int?): PlantEntity {
     return PlantEntity(
@@ -135,6 +137,12 @@ internal fun PlantTaskLogEntity.toPlantTaskLog(): PlantTaskLog {
         plantId = plantId,
         taskId = taskId,
         title = title,
-        date = date
+        date = date,
+        content = content,
+        id = id
     )
+}
+
+internal fun WateringLogEntity.toWateringLog(): WateringLog {
+    return WateringLog(plantId = plantId, date = date)
 }

@@ -66,9 +66,15 @@ internal class PlantTaskRepositoryImpl @Inject constructor(
             val exists = plantTaskDao.hasTaskLog(taskId, date)
             if (exists == isDone) return@withTransaction false
             if (isDone) {
-                // 할일이 삭제되어도 표시할 수 있도록 현재 제목을 함께 저장
+                // 할일이 삭제되어도 표시할 수 있도록 현재 제목과 내용을 함께 저장
                 plantTaskDao.insertTaskLog(
-                    PlantTaskLogEntity(plantId = task.plantId, taskId = taskId, title = task.title, date = date)
+                    PlantTaskLogEntity(
+                        plantId = task.plantId,
+                        taskId = taskId,
+                        title = task.title,
+                        date = date,
+                        content = task.content
+                    )
                 )
                 if (task.type == PlantTaskType.ONE_TIME.name) {
                     plantTaskDao.deleteTask(taskId)
@@ -92,6 +98,14 @@ internal class PlantTaskRepositoryImpl @Inject constructor(
         endDate: LocalDate
     ): List<PlantTaskLog> =
         plantTaskDao.getPlantTaskLogsByRange(plantId, startDate, endDate).map { it.toPlantTaskLog() }
+
+    override fun observeTaskLogsByRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        plantId: Int?
+    ): Flow<List<PlantTaskLog>> =
+        plantTaskDao.observeTaskLogsByRange(startDate, endDate, plantId)
+            .map { list -> list.map { it.toPlantTaskLog() } }
 
     override suspend fun getActiveAlarmTaskIds(): List<Int> = plantTaskDao.getActiveAlarmTaskIds()
 

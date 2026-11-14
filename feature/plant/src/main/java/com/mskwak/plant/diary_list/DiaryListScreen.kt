@@ -1,10 +1,15 @@
 package com.mskwak.plant.diary_list
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +39,8 @@ import com.mskwak.domain.model.DiaryListPeriodUnit
 import com.mskwak.domain.model.DiaryListSortOrder
 import com.mskwak.domain.model.DiaryListViewOption
 import com.mskwak.plant.R
+import com.mskwak.common_ui.util.toDateWithDayOfWeek
+import com.mskwak.plant.model.DiaryListDayUiModel
 import com.mskwak.plant.model.DiaryListItemUiModel
 import java.time.LocalDate
 import java.time.Month
@@ -50,10 +57,22 @@ fun DiaryListScreen(
         mutableStateOf(null)
     }
 
+    var taskDialogState: DiaryListEffect.ShowTaskDialog? by remember {
+        mutableStateOf(null)
+    }
+
     Content(
         state = state,
         onEvent = viewModel::setEvent
     )
+
+    taskDialogState?.let { dialogState ->
+        DiaryListTaskDialog(
+            title = dialogState.title,
+            content = dialogState.content,
+            onDismiss = { taskDialogState = null }
+        )
+    }
 
     selectYearMonthDialogState?.let { dialogState ->
         SelectYearMonthDialog(
@@ -74,6 +93,10 @@ fun DiaryListScreen(
                     selectYearMonthDialogState = effect
                 }
 
+                is DiaryListEffect.ShowTaskDialog -> {
+                    taskDialogState = effect
+                }
+
                 is DiaryListEffect.Navigation -> {
                     navigate(effect)
                 }
@@ -87,6 +110,19 @@ private fun Content(
     state: DiaryListState,
     onEvent: (DiaryListEvent) -> Unit
 ) {
+    // 빈 화면으로 바뀌었다 돌아와도 유지되도록 목록 밖에서 보관
+    val listState = rememberLazyListState()
+    val queryKey = listOf(state.currentPlant?.plantId, state.currentYearMonth, state.periodUnit, state.sortOrder)
+    var scrolledQueryKey by remember { mutableStateOf(queryKey) }
+    // 조회 조건이 바뀐 뒤 새 목록이 도착했을 때만 맨 위로 이동한다.
+    // 조건 변경 즉시 이동하면 이전 목록 기준으로 이동한 뒤 key 기반 위치 유지로 다시 어긋날 수 있다.
+    LaunchedEffect(state.days) {
+        if (scrolledQueryKey != queryKey) {
+            listState.scrollToItem(0)
+            scrolledQueryKey = queryKey
+        }
+    }
+
     Scaffold(
         topBar = {
             TopBar(
@@ -131,44 +167,78 @@ private fun Content(
 
             Spacer(Modifier.height(8.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            if (state.diaries.isEmpty()) {
+            if (state.days.isEmpty()) {
                 ListEmptyView(modifier = Modifier.weight(1f))
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    if (state.periodUnit == DiaryListPeriodUnit.YEAR) {
-                        // 연도별 보기는 목록이 길어 월마다 헤더로 구분. groupBy가 정렬 순서를 유지한다.
-                        state.diaries.groupBy { it.date.month }.forEach { (month, diaries) ->
-                            item(key = "month_header_$month") {
-                                MonthHeader(month = month)
-                            }
-                            items(
-                                items = diaries,
-                                key = { it.id }
-                            ) { item ->
-                                DiaryListItem(
-                                    diary = item,
-                                    onEvent = onEvent
-                                )
-                            }
-                        }
-                    } else {
-                        items(
-                            items = state.diaries,
-                            key = { it.id }
-                        ) { item ->
-                            DiaryListItem(
-                                diary = item,
-                                onEvent = onEvent
-                            )
-                        }
-                    }
-                }
+                DiaryListContent(
+                    listState = listState,
+                    days = state.days,
+                    isYear = state.periodUnit == DiaryListPeriodUnit.YEAR,
+                    onEvent = onEvent
+                )
             }
         }
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DiaryListContent(
+    listState: LazyListState,
+    days: List<DiaryListDayUiModel>,
+    isYear: Boolean,
+    onEvent: (DiaryListEvent) -> Unit
+) {
+    LazyColumn(
+        state = listState,
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
+    ) {
+        if (isYear) {
+            // 연도별 보기는 목록이 길어 월마다 sticky 헤더로 구분. groupBy가 정렬 순서를 유지한다.
+            days.groupBy { it.date.month }.forEach { (month, monthDays) ->
+                stickyHeader(key = "month_$month") {
+                    MonthHeader(month = month)
+                }
+                monthDays.forEach { day ->
+                    dayGroup(day = day, onEvent = onEvent)
+                }
+            }
+        } else {
+            days.forEach { day ->
+                dayGroup(day = day, onEvent = onEvent)
+            }
+        }
+    }
+}
+
+private fun LazyListScope.dayGroup(
+    day: DiaryListDayUiModel,
+    onEvent: (DiaryListEvent) -> Unit
+) {
+    item(key = "date_${day.date}") {
+        DateHeader(date = day.date)
+    }
+    items(items = day.items, key = { it.key }) { item ->
+        DiaryListItem(
+            item = item,
+            onEvent = onEvent,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+    }
+    // 그룹 간격은 끝 Spacer로 준다. 헤더에 위 패딩을 주면 월 sticky 헤더와 겹칠 때 여백이 어긋난다.
+    item(key = "spacer_${day.date}") {
+        Spacer(Modifier.height(14.dp))
+    }
+}
+
+@Composable
+private fun DateHeader(date: LocalDate) {
+    Text(
+        text = date.toDateWithDayOfWeek(),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(start = 2.dp, top = 8.dp, bottom = 8.dp)
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -261,12 +331,27 @@ private fun PeriodArrowButton(
 @Composable
 private fun MonthHeader(month: Month) {
     val locale = LocalConfiguration.current.locales[0]
-    Text(
-        text = month.getDisplayName(TextStyle.FULL, locale),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            // 상단에 붙었을 때 아래 카드가 비치지 않도록 배경을 칠한다
+            .background(MaterialTheme.colorScheme.background)
+            .padding(start = 2.dp, top = 10.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier
+                .size(6.dp)
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
+        )
+        Spacer(Modifier.width(7.dp))
+        Text(
+            text = month.getDisplayName(TextStyle.FULL, locale),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
 }
 
 @Composable
@@ -302,31 +387,49 @@ private fun ListEmptyView(
 
         Spacer(Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.diary_list_empty),
+            text = stringResource(R.string.diary_list_record_empty),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
+private val previewDays = listOf(
+    DiaryListDayUiModel(
+        date = LocalDate.of(2023, 11, 12),
+        items = listOf(
+            DiaryListItemUiModel.Diary(1, emptyList(), "장미에 물을 주었다. 잎이 아주 푸르고 건강해 보인다.", "Rose", false),
+            DiaryListItemUiModel.Task(1, "분갈이", "새 화분으로 옮겨 심었다.", "Rose", false),
+            DiaryListItemUiModel.Watering(1, LocalDate.of(2023, 11, 12), "Rose", false)
+        )
+    ),
+    DiaryListDayUiModel(
+        date = LocalDate.of(2023, 11, 3),
+        items = listOf(
+            DiaryListItemUiModel.Diary(2, emptyList(), "튤립이 피었다!", "Tulip", true),
+            DiaryListItemUiModel.Task(2, "영양제 주기", null, "Tulip", true),
+            DiaryListItemUiModel.Watering(2, LocalDate.of(2023, 11, 3), "Tulip", true)
+        )
+    ),
+    DiaryListDayUiModel(
+        date = LocalDate.of(2023, 10, 28),
+        items = listOf(
+            DiaryListItemUiModel.Diary(3, emptyList(), "튤립 구근을 심었다.", "Tulip", false),
+            DiaryListItemUiModel.Watering(3, LocalDate.of(2023, 10, 28), "Tulip", false)
+        )
+    )
+)
+
 @Preview(name = "Content - List")
 @Composable
 private fun ContentPreview() {
-    val now = LocalDate.now()
     GardenLogTheme {
         val samplePlantFilter = DiaryListPlantFilterUiModel(
             plantId = 1,
             plantName = "Rose"
         )
-        val sampleDiary = DiaryListItemUiModel(
-            id = 1,
-            date = now,
-            content = "Watered the rose plant and it seems to be doing well. The leaves are very green and healthy.",
-            imagePath = null,
-            plantName = "Rose"
-        )
         val sampleState = DiaryListState(
-            currentYearMonth = YearMonth.of(2023, 10),
+            currentYearMonth = YearMonth.of(2023, 11),
             currentPlant = samplePlantFilter,
             plantFilterList = listOf(
                 samplePlantFilter,
@@ -336,21 +439,7 @@ private fun ContentPreview() {
                 periodUnit = DiaryListPeriodUnit.MONTH,
                 sortOrder = DiaryListSortOrder.CREATED_LATEST
             ),
-            diaries = listOf(
-                sampleDiary,
-                sampleDiary.copy(
-                    id = 2,
-                    date = now.minusDays(2),
-                    plantName = "Tulip",
-                    content = "Tulip is blooming!"
-                ),
-                sampleDiary.copy(
-                    id = 3,
-                    date = now.minusDays(3),
-                    plantName = "Rose",
-                    content = "Found a pest on the rose, applied treatment."
-                )
-            )
+            days = previewDays.take(2)
         )
 
         Content(
@@ -364,24 +453,13 @@ private fun ContentPreview() {
 @Composable
 private fun ContentYearPreview() {
     GardenLogTheme {
-        val sampleDiary = DiaryListItemUiModel(
-            id = 1,
-            date = LocalDate.of(2023, 11, 12),
-            content = "Watered the rose plant.",
-            imagePath = null,
-            plantName = "Rose"
-        )
         val sampleState = DiaryListState(
             currentYearMonth = YearMonth.of(2023, 11),
             viewOption = DiaryListViewOption(
                 periodUnit = DiaryListPeriodUnit.YEAR,
                 sortOrder = DiaryListSortOrder.CREATED_LATEST
             ),
-            diaries = listOf(
-                sampleDiary,
-                sampleDiary.copy(id = 2, date = LocalDate.of(2023, 10, 28), content = "Planted tulip bulbs."),
-                sampleDiary.copy(id = 3, date = LocalDate.of(2023, 10, 5), content = "Repotted the rose.")
-            )
+            days = previewDays
         )
 
         Content(
@@ -397,7 +475,7 @@ private fun ContentEmptyPreview() {
     GardenLogTheme {
         val sampleState = DiaryListState(
             currentYearMonth = YearMonth.of(2023, 10),
-            diaries = emptyList()
+            days = emptyList()
         )
 
         Content(

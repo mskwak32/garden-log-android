@@ -21,3 +21,7 @@ fun LocalDate?.toDateWithDayOfWeek(): String {
     return this?.format(DateTimeFormatter.ofPattern("MM. dd E")) ?: ""
 }
 
+fun LocalDate?.toDateWithDayOfWeekLong(): String {
+    return this?.let { "${it.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))} (${it.format(DateTimeFormatter.ofPattern("E"))})" } ?: ""
+}
+

@@ -1,15 +1,18 @@
 package com.mskwak.data.repository
 
 import androidx.room.withTransaction
+import com.mskwak.data.mapper.toWateringLog
 import com.mskwak.database.GardenDatabase
 import com.mskwak.database.dao.WateringLogDao
 import com.mskwak.database.entity.WateringLogEntity
+import com.mskwak.domain.model.WateringLog
 import com.mskwak.domain.model.WateringValidationException
 import com.mskwak.domain.model.WateringValidationReason
 import com.mskwak.domain.repository.WateringLogRepository
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 internal class WateringLogRepositoryImpl @Inject constructor(
     private val wateringLogDao: WateringLogDao,
@@ -66,6 +69,14 @@ internal class WateringLogRepositoryImpl @Inject constructor(
     ): List<LocalDate> {
         return wateringLogDao.getWateringDatesByRange(plantId, startDate, endDate)
     }
+
+    override fun observeWateringLogsByRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        plantId: Int?
+    ): Flow<List<WateringLog>> =
+        wateringLogDao.observeWateringLogsByRange(startDate, endDate, plantId)
+            .map { list -> list.map { it.toWateringLog() } }
 
     override suspend fun getLatestWateringDateBefore(plantId: Int, date: LocalDate): LocalDate? {
         return wateringLogDao.getLatestWateringDateBefore(plantId, date)

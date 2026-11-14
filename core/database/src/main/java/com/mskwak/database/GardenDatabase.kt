@@ -12,7 +12,7 @@ import com.mskwak.database.entity.*
 
 @Database(
     entities = [PlantEntity::class, DiaryEntity::class, PictureEntity::class, DiaryPictureCrossRef::class, WateringLogEntity::class, PlantTaskEntity::class, PlantTaskLogEntity::class],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 @TypeConverters(GardenDatabaseConverter::class)
