@@ -76,15 +76,29 @@ entry<FooNavKey> {
 
 ## Tech Stack
 
-- Kotlin 2.3.20, JVM 17
-- Compose BOM 2026.03.01, Material 3
-- AGP 9.1.1, compileSdk 37/minSdk 29
-- Hilt 2.59.2, KSP
-- Room 2.8.4 (DB v10; migrations required for schema changes)
-- Navigation 3 1.1.0
-- Retrofit 3.0.0, OkHttp 5.3.2, Kotlin Serialization
-- Coil 3.4.0, Lottie 6.7.1
-- Firebase BOM 34.12.0 (Analytics, Crashlytics — disabled in Debug)
+Versions: `gradle/libs.versions.toml` (don't trust version numbers written elsewhere).
+
+- Kotlin, JVM 17
+- Jetpack Compose, Material 3
+- Hilt, KSP
+- Room (migrations required for schema changes)
+- Navigation 3
+- Retrofit, OkHttp, Kotlin Serialization
+- Coil, Lottie
+- Firebase (Analytics, Crashlytics — disabled in Debug)
+
+## Release (Google Play)
+
+Gradle Play Publisher. Uploads go to the production track as a **draft**; publish from Play Console.
+
+```bash
+./gradlew bundleRelease          # signed .aab only (signing keys in local.properties)
+./gradlew publishReleaseBundle   # build + upload to Play (production, draft)
+```
+
+- Release notes: edit `docs/release_note.xml` only. `syncPlayReleaseNotes` regenerates `app/src/main/play/release-notes/` (gitignored) before upload.
+- Credentials: `keystore/play-service-account.json` (gitignored, never commit).
+- Uploading is outward-facing: confirm with the user before running `publish*` / `promote*` tasks.
 
 ## Conventions
 

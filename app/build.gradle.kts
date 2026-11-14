@@ -1,3 +1,4 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -15,6 +16,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.service)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.play.publisher)
 }
 
 android {
@@ -71,6 +73,40 @@ android {
         compose = true
         buildConfig = true
     }
+}
+
+play {
+    serviceAccountCredentials.set(rootProject.file("keystore/play-service-account.json"))
+    defaultToAppBundles.set(true)
+    track.set("production")
+    // 업로드 후 Play Console에서 확인하고 직접 출시하도록 초안으로 올린다
+    releaseStatus.set(ReleaseStatus.DRAFT)
+}
+
+// 출시 노트 원본은 docs/release_note.xml 하나로 두고, GPP가 읽는 언어별 파일은 업로드 직전에 생성한다
+val syncPlayReleaseNotes by tasks.registering {
+    val source = rootProject.file("docs/release_note.xml")
+    val outputDir = layout.projectDirectory.dir("src/main/play/release-notes").asFile
+    inputs.file(source)
+    outputs.dir(outputDir)
+    doLast {
+        val notes = Regex("<([a-z]{2}-[A-Z]{2})>(.*?)</\\1>", RegexOption.DOT_MATCHES_ALL)
+            .findAll(source.readText())
+            .toList()
+        check(notes.isNotEmpty()) { "release_note.xml에서 언어별 출시 노트를 찾지 못했습니다." }
+        outputDir.deleteRecursively()
+        notes.forEach { match ->
+            val (locale, body) = match.destructured
+            val text = body.trim().lines().joinToString("\n") { it.trim() }
+            File(outputDir, "$locale/default.txt").apply {
+                parentFile.mkdirs()
+                writeText(text + "\n")
+            }
+        }
+    }
+}
+tasks.matching { it.name == "generateReleasePlayResources" }.configureEach {
+    dependsOn(syncPlayReleaseNotes)
 }
 
 dependencies {
