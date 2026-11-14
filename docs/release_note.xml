@@ -5,23 +5,26 @@
         - 일기 탭에서 월별과 연도별 중 원하는 방식으로 일기를 볼 수 있어요.
         - 연도별로 보면 일기가 월별로 나뉘어 표시돼요.
 
-        개선 사항
-        - 일기 목록과 식물 목록의 정렬 순서, 일기 보기 방식이 앱을 다시 열어도 유지돼요.
+        새 기능: 일기 탭에서 기록을 한눈에
+        - 일기와 함께 물주기, 완료한 할일도 날짜별로 모아서 보여줘요.
+        - 사진이 여러 장인 일기는 목록에서 넘겨 가며 볼 수 있어요.
     </ko-KR>
     <en-US>
         New: Yearly diary view
         - Switch between monthly and yearly views in the Diary tab.
         - The yearly view groups your entries by month.
 
-        Improvements
-        - Your sort order for diaries and plants, and your diary view, are now kept after you reopen the app.
+        New: All records in the Diary tab
+        - Watering and completed tasks now appear alongside your diary entries, grouped by date.
+        - Swipe through multiple photos in the list.
     </en-US>
     <ja-JP>
         新機能：年別の日記表示
         - 日記タブで月別・年別を切り替えて日記を表示できます。
         - 年別表示では日記が月ごとに分かれて表示されます。
 
-        改善
-        - 日記・植物リストの並び順と日記の表示方法が、アプリを再起動しても保持されます。
+        新機能：日記タブで記録をまとめて確認
+        - 日記と一緒に水やりや完了したタスクも日付ごとに表示されます。
+        - 写真が複数ある日記は、リスト上でスワイプして見られます。
     </ja-JP>
 </release>
