@@ -78,8 +78,8 @@ play {
     serviceAccountCredentials.set(rootProject.file("keystore/play-service-account.json"))
     defaultToAppBundles.set(true)
     track.set("production")
-    // 업로드 후 Play Console에서 확인하고 직접 출시하도록 초안으로 올린다
-    releaseStatus.set(ReleaseStatus.DRAFT)
+    // 초안이 아닌 출시로 확정한다. 확정되면 Play가 검토 요청을 자동으로 보내고, 승인되면 전체 사용자에게 배포된다
+    releaseStatus.set(ReleaseStatus.COMPLETED)
 }
 
 // 출시 노트 원본은 docs/release_note.xml 하나로 두고, GPP가 읽는 언어별 파일은 업로드 직전에 생성한다

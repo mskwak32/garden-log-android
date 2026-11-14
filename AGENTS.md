@@ -89,16 +89,16 @@ Versions: `gradle/libs.versions.toml` (don't trust version numbers written elsew
 
 ## Release (Google Play)
 
-Gradle Play Publisher. Uploads go to the production track as a **draft**; publish from Play Console.
+Gradle Play Publisher. `publishReleaseBundle` creates a **completed production release**: Play sends it for review automatically and rolls it out to all users once approved. There is no draft step to stop it.
 
 ```bash
 ./gradlew bundleRelease          # signed .aab only (signing keys in local.properties)
-./gradlew publishReleaseBundle   # build + upload to Play (production, draft)
+./gradlew publishReleaseBundle   # build + release to Play production (sent for review)
 ```
 
 - Release notes: edit `docs/release_note.xml` only. `syncPlayReleaseNotes` regenerates `app/src/main/play/release-notes/` (gitignored) before upload.
 - Credentials: `keystore/play-service-account.json` (gitignored, never commit).
-- Uploading is outward-facing: confirm with the user before running `publish*` / `promote*` tasks.
+- **Never run `publish*` / `promote*` tasks on your own.** Run them only when the user explicitly asks to release in their latest message — not as part of other work, a verification step, or a previous approval.
 
 ## Conventions
 
