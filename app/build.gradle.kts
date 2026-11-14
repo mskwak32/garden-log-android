@@ -9,7 +9,6 @@ val localProperties = Properties().apply {
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -84,7 +83,7 @@ play {
 }
 
 // 출시 노트 원본은 docs/release_note.xml 하나로 두고, GPP가 읽는 언어별 파일은 업로드 직전에 생성한다
-val syncPlayReleaseNotes by tasks.registering {
+val syncPlayReleaseNotes = tasks.register("syncPlayReleaseNotes") {
     val source = rootProject.file("docs/release_note.xml")
     val outputDir = layout.projectDirectory.dir("src/main/play/release-notes").asFile
     inputs.file(source)
