@@ -143,4 +143,14 @@
     <string name="message_task_outside_range">완료 날짜는 심은 날짜부터 오늘까지 선택해 주세요.</string>
     <string name="message_task_harvested">수확한 식물의 할일은 변경할 수 없습니다.</string>
     <string name="message_task_alarm_failed">할일은 저장했지만 알람을 예약하지 못했습니다.\n알람 설정을 확인해 주세요.</string>
+
+    <!-- 접근성(TalkBack) -->
+    <string name="a11y_add_photo">사진 추가</string>
+    <string name="a11y_plant_photo">식물 사진</string>
+    <string name="a11y_diary_photo">일기 사진 %1$d/%2$d</string>
+    <string name="a11y_view_larger">크게 보기</string>
+    <string name="a11y_change_photo">사진 변경</string>
+    <string name="a11y_expanded">펼쳐짐</string>
+    <string name="a11y_collapsed">접힘</string>
+    <string name="a11y_task">할일</string>
 </resources>

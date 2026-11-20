@@ -316,7 +316,7 @@ private fun PhotoSection(
         ) {
             Icon(
                 imageVector = IconPack.AddPhotoBlack,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.a11y_add_photo),
                 modifier = Modifier.size(28.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -214,7 +214,7 @@ private fun ForegroundCard(
             if (taskRemainDays == null) {
                 Image(
                     imageVector = wateringIcon,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.watering),
                     modifier = Modifier.size(30.dp)
                 )
 
@@ -228,11 +228,13 @@ private fun ForegroundCard(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     DDayLine(
                         icon = wateringIcon,
+                        iconDescription = stringResource(R.string.watering),
                         text = wateringText,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     DDayLine(
                         icon = IconPack.Gardening,
+                        iconDescription = stringResource(R.string.a11y_task),
                         text = when {
                             taskRemainDays == 0 -> stringResource(R.string.today)
                             taskRemainDays > 0 -> {
@@ -257,11 +259,11 @@ private fun ForegroundCard(
 }
 
 @Composable
-private fun DDayLine(icon: ImageVector, text: String, color: Color) {
+private fun DDayLine(icon: ImageVector, iconDescription: String, text: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Image(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = iconDescription,
             modifier = Modifier.size(20.dp)
         )
         Spacer(Modifier.width(4.dp))

@@ -143,4 +143,14 @@
     <string name="message_task_outside_range">Choose a completion date between the planting date and today.</string>
     <string name="message_task_harvested">Tasks for harvested plants cannot be changed.</string>
     <string name="message_task_alarm_failed">The task was saved, but the alarm could not be scheduled.\nCheck alarm settings.</string>
+
+    <!-- 접근성(TalkBack) -->
+    <string name="a11y_add_photo">Add photo</string>
+    <string name="a11y_plant_photo">Plant photo</string>
+    <string name="a11y_diary_photo">Diary photo %1$d of %2$d</string>
+    <string name="a11y_view_larger">View larger</string>
+    <string name="a11y_change_photo">Change photo</string>
+    <string name="a11y_expanded">Expanded</string>
+    <string name="a11y_collapsed">Collapsed</string>
+    <string name="a11y_task">Task</string>
 </resources>

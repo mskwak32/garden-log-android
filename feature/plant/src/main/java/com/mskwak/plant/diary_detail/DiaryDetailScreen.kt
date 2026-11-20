@@ -202,12 +202,14 @@ private fun PhotoPagerSection(
         ) { page ->
             AsyncImage(
                 model = picturePaths[page],
-                contentDescription = null,
+                contentDescription = stringResource(R.string.a11y_diary_photo, page + 1, picturePaths.size),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(12.dp))
-                    .clickable { onImageClick(picturePaths[page]) }
+                    .clickable(onClickLabel = stringResource(R.string.a11y_view_larger)) {
+                        onImageClick(picturePaths[page])
+                    }
             )
         }
         if (picturePaths.size > 1) {

@@ -406,7 +406,10 @@ private fun PlantPhotoSection(
             .fillMaxWidth()
             .height(200.dp)
             .clip(RoundedCornerShape(15.dp))
-            .clickable(onClick = onClick)
+            .clickable(
+                onClickLabel = if (imagePath == null) null else stringResource(R.string.a11y_change_photo),
+                onClick = onClick
+            )
     ) {
         if (imagePath == null) {
             Box(
@@ -418,7 +421,7 @@ private fun PlantPhotoSection(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = IconPack.AddPhotoBlack,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.a11y_add_photo),
                         modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -433,7 +436,7 @@ private fun PlantPhotoSection(
         } else {
             AsyncImage(
                 model = imagePath,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.a11y_plant_photo),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )

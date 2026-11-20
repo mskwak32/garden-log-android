@@ -23,6 +23,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -329,7 +331,16 @@ private fun PlantImage(
                 .fillMaxWidth()
                 .height(200.dp)
                 .clip(RoundedCornerShape(15.dp))
-                .then(if (imagePath != null) Modifier.clickableWithoutRipple(onClick = onClick) else Modifier),
+                .then(
+                    if (imagePath != null) {
+                        Modifier.clickableWithoutRipple(
+                            onClickLabel = stringResource(R.string.a11y_view_larger),
+                            onClick = onClick,
+                        )
+                    } else {
+                        Modifier
+                    },
+                ),
     ) {
         if (imagePath == null) {
             Box(
@@ -348,7 +359,7 @@ private fun PlantImage(
         } else {
             AsyncImage(
                 model = imagePath,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.a11y_plant_photo),
                 contentScale = ContentScale.Crop,
                 modifier = modifier.fillMaxSize(),
             )
@@ -768,6 +779,8 @@ private fun HarvestSection(
     memoInput: String,
     onEvent: (PlantDetailEvent) -> Unit,
 ) {
+    val harvestStateDescription =
+        stringResource(if (isExpanded) R.string.a11y_expanded else R.string.a11y_collapsed)
     Column(
         modifier =
             modifier
@@ -783,7 +796,8 @@ private fun HarvestSection(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .clickableWithoutRipple { onEvent(PlantDetailEvent.OnHarvestSectionToggled) },
+                    .clickableWithoutRipple { onEvent(PlantDetailEvent.OnHarvestSectionToggled) }
+                    .semantics { stateDescription = harvestStateDescription },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

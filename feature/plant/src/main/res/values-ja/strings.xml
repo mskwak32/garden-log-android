@@ -143,4 +143,14 @@
     <string name="message_task_outside_range">完了日は植えた日から今日までを選択してください。</string>
     <string name="message_task_harvested">収穫済みの植物のタスクは変更できません。</string>
     <string name="message_task_alarm_failed">タスクは保存されましたが、アラームを設定できませんでした。\n設定を確認してください。</string>
+
+    <!-- 접근성(TalkBack) -->
+    <string name="a11y_add_photo">写真を追加</string>
+    <string name="a11y_plant_photo">植物の写真</string>
+    <string name="a11y_diary_photo">日記の写真 %1$d/%2$d</string>
+    <string name="a11y_view_larger">拡大表示</string>
+    <string name="a11y_change_photo">写真を変更</string>
+    <string name="a11y_expanded">展開中</string>
+    <string name="a11y_collapsed">折りたたみ中</string>
+    <string name="a11y_task">タスク</string>
 </resources>
