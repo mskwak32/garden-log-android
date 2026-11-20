@@ -90,7 +90,8 @@ internal class PdfDataSourceImpl @Inject constructor(
             ?: error("MediaStore insert 실패")
 
         try {
-            resolver.openOutputStream(uri)!!.use { outputStream ->
+            val stream = resolver.openOutputStream(uri) ?: error("OutputStream 열기 실패")
+            stream.use { outputStream ->
                 val pdfDocument = PdfDocument()
 
                 val writer = PageWriter(pdfDocument)

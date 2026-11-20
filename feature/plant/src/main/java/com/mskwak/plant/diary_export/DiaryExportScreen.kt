@@ -105,9 +105,10 @@ private fun Content(
                 Spacer(Modifier.height(24.dp))
 
                 // 날짜 범위 선택 (일기가 있는 경우에만 활성화)
-                if (state.diaryDateRange != null) {
+                state.diaryDateRange?.let { dateRange ->
                     DateRangeSection(
                         state = state,
+                        dateRange = dateRange,
                         onEvent = onEvent
                     )
                 }
@@ -140,10 +141,10 @@ private fun Content(
 @Composable
 private fun DateRangeSection(
     state: DiaryExportState,
+    dateRange: Pair<LocalDate, LocalDate>,
     onEvent: (DiaryExportEvent) -> Unit
 ) {
-    val minDate = state.diaryDateRange!!.first
-    val maxDate = state.diaryDateRange.second
+    val (minDate, maxDate) = dateRange
 
     Text(
         text = stringResource(R.string.diary_export_start_date),
