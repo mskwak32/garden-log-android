@@ -1,6 +1,5 @@
 package com.mskwak.domain.usecase.plant
 
-import com.mskwak.domain.model.Plant
 import com.mskwak.domain.repository.DiaryRepository
 import com.mskwak.domain.repository.PictureRepository
 import com.mskwak.domain.repository.PlantRepository
@@ -16,7 +15,9 @@ class DeletePlantUseCase(
     private val setWateringAlarmUseCase: SetWateringAlarmUseCase,
     private val setPlantTaskAlarmUseCase: SetPlantTaskAlarmUseCase
 ) {
-    suspend operator fun invoke(plant: Plant) {
+    /** 이미 삭제된 식물이면 false를 반환한다. */
+    suspend operator fun invoke(plantId: Int): Boolean {
+        val plant = plantRepository.getPlant(plantId) ?: return false
         // 삭제 후에는 할일 ID를 조회할 수 없으므로 알람을 먼저 취소
         plantTaskRepository.getTaskIdsByPlantId(plant.id).forEach {
             setPlantTaskAlarmUseCase(it, false)
@@ -26,5 +27,6 @@ class DeletePlantUseCase(
         plant.picture?.let { pictureRepository.deletePicture(it) }
         plantRepository.deletePlant(plant)
         setWateringAlarmUseCase(plant.id, isActive = false)
+        return true
     }
 }

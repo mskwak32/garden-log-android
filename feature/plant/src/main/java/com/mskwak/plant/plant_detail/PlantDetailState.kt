@@ -64,6 +64,10 @@ data class PlantDetailState(
     // 달력 대상의 저장·취소 판단에 쓰는 기록 날짜
     val calendarRecordDates: Set<LocalDate>
         get() = if (calendarTarget is CalendarTarget.Task) taskLogDates else wateringDates
+
+    // 물주기·할일 기록은 심은 날부터 오늘까지만 추가할 수 있다.
+    fun isInRecordRange(date: LocalDate): Boolean =
+        createdAt != null && date >= createdAt && date <= LocalDate.now()
 }
 
 sealed interface CalendarTarget {
@@ -122,23 +126,25 @@ sealed interface PlantDetailEvent : ViewEvent {
     data object OnCalendarSaveClicked : PlantDetailEvent
     data object OnCalendarRetry : PlantDetailEvent
 
-    // 할일
-    data object OnAddTaskClicked : PlantDetailEvent
-    data class OnTaskMoreClicked(val taskId: Int) : PlantDetailEvent
-    data object OnTaskDialogDismissed : PlantDetailEvent
-    data class OnTaskTitleChanged(val title: String) : PlantDetailEvent
-    data class OnTaskContentChanged(val content: String) : PlantDetailEvent
-    data class OnTaskTypeChanged(val type: PlantTaskType) : PlantDetailEvent
-    data class OnTaskDateChanged(val date: LocalDate) : PlantDetailEvent
-    data class OnTaskPeriodChanged(val periodDays: Int) : PlantDetailEvent
-    data class OnTaskAlarmTimeChanged(val time: LocalTime) : PlantDetailEvent
-    data object OnTaskSaveClicked : PlantDetailEvent
-    data object OnTaskDeleteClicked : PlantDetailEvent
-    data class OnTaskDeleteConfirmed(val taskId: Int) : PlantDetailEvent
-    data class OnTaskCompleteClicked(val taskId: Int) : PlantDetailEvent
-    data class OnOneTimeTaskCompleteConfirmed(val taskId: Int, val date: LocalDate) : PlantDetailEvent
-    data class OnTaskCancelClicked(val taskId: Int) : PlantDetailEvent
-    data class ToggleTaskAlarm(val taskId: Int, val isActive: Boolean) : PlantDetailEvent
+    // 할일. 처리는 PlantDetailTaskHandler가 맡는다.
+    sealed interface TaskEvent : PlantDetailEvent
+
+    data object OnAddTaskClicked : TaskEvent
+    data class OnTaskMoreClicked(val taskId: Int) : TaskEvent
+    data object OnTaskDialogDismissed : TaskEvent
+    data class OnTaskTitleChanged(val title: String) : TaskEvent
+    data class OnTaskContentChanged(val content: String) : TaskEvent
+    data class OnTaskTypeChanged(val type: PlantTaskType) : TaskEvent
+    data class OnTaskDateChanged(val date: LocalDate) : TaskEvent
+    data class OnTaskPeriodChanged(val periodDays: Int) : TaskEvent
+    data class OnTaskAlarmTimeChanged(val time: LocalTime) : TaskEvent
+    data object OnTaskSaveClicked : TaskEvent
+    data object OnTaskDeleteClicked : TaskEvent
+    data class OnTaskDeleteConfirmed(val taskId: Int) : TaskEvent
+    data class OnTaskCompleteClicked(val taskId: Int) : TaskEvent
+    data class OnOneTimeTaskCompleteConfirmed(val taskId: Int, val date: LocalDate) : TaskEvent
+    data class OnTaskCancelClicked(val taskId: Int) : TaskEvent
+    data class ToggleTaskAlarm(val taskId: Int, val isActive: Boolean) : TaskEvent
 }
 
 sealed interface PlantDetailEffect : ViewEffect {
