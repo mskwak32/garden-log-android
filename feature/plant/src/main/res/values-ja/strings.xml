@@ -69,6 +69,7 @@
     <string name="message_delete_confirm">本当に削除しますか？\n関連する日記なども削除され、復元できません。</string>
     <string name="message_not_ready">準備中です</string>
     <string name="message_save_failed">保存に失敗しました。</string>
+    <string name="message_picture_add_failed">写真を追加できませんでした。もう一度お試しください。</string>
     <string name="exact_alarm_permission_title">アラーム権限が必要です</string>
     <string name="exact_alarm_permission_message">正確な水やりリマインダーのためにアラーム権限が必要です。\n設定で権限を許可してください。</string>
 

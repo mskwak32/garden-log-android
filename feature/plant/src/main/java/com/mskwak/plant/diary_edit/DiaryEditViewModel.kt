@@ -23,6 +23,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -119,17 +120,33 @@ class DiaryEditViewModel @AssistedInject constructor(
     private fun addPictures(event: DiaryEditEvent.OnPicturesAdded) {
         viewModelScope.launch {
             var skipped = false
+            var failed = false
             for (uri in event.uris) {
                 val currentSize = viewState.value.picturePaths.size
                 if (currentSize >= Constants.MAX_PICTURE_PER_DIARY) {
                     skipped = true
                     break
                 }
-                val bytes = readBytesFromUri(application, uri) ?: continue
+                val bytes = readBytesFromUri(application, uri)
                 cleanupCameraCache(application)
-                val picture = savePictureUseCase(bytes)
+                if (bytes == null) {
+                    failed = true
+                    continue
+                }
+                val picture = try {
+                    savePictureUseCase(bytes)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // 실패한 사진만 건너뛰고 나머지는 계속 추가한다.
+                    failed = true
+                    continue
+                }
                 newPictures.add(picture)
                 setState { copy(picturePaths = picturePaths + picture.path) }
+            }
+            if (failed) {
+                setEffect(DiaryEditEffect.ShowSnackbar(R.string.message_picture_add_failed))
             }
             if (skipped) {
                 setEffect(DiaryEditEffect.ShowSnackbar(R.string.message_no_more_picture))

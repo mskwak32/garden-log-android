@@ -2,12 +2,13 @@ package com.mskwak.file.source_impl
 
 import android.app.Application
 import android.graphics.Bitmap
-import androidx.core.net.toUri
 import com.mskwak.file.Constants
 import com.mskwak.file.FileDataSource
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.util.UUID
 import javax.inject.Inject
 
 internal class FileDataSourceImpl @Inject constructor(
@@ -25,24 +26,21 @@ internal class FileDataSourceImpl @Inject constructor(
             dir.mkdirs()
         }
 
-        var file = File(dir, "${bitmap.hashCode()}")
-
-        // 중복저장 피하기
-        var postfix = 0
-        while (file.exists()) {
-            file = File(dir, "${bitmap.hashCode()}_${++postfix}.jpg")
-        }
+        val file = File(dir, "${UUID.randomUUID()}.jpg")
 
         try {
-            file.createNewFile()
-            FileOutputStream(file).use { out ->
+            val compressed = FileOutputStream(file).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.JPEG, Constants.FILE_COMPRESS_QUALITY, out)
-                Timber.d("save picture: ${file.toUri().path}")
             }
+            if (!compressed) throw IOException("bitmap compress failed")
         } catch (e: Exception) {
+            // 깨진 파일이 DB에 기록되지 않도록 지우고 호출부에 실패를 알린다.
+            file.delete()
             Timber.e(e, "save picture error")
+            throw e
         }
 
+        Timber.d("save picture: ${file.path}")
         return file
     }
 

@@ -15,6 +15,7 @@ internal class PictureRepositoryImpl @Inject constructor(
 ) : PictureRepository {
     override suspend fun savePicture(bitmap: ByteArray): Picture {
         val decodedBitmap = BitmapFactory.decodeByteArray(bitmap, 0, bitmap.size)
+            ?: throw IllegalArgumentException("cannot decode picture")
         val file = fileDataSource.savePicture(PLANT_PICTURE_DIR, decodedBitmap)
 
         return Picture(

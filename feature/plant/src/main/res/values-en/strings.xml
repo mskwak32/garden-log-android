@@ -69,6 +69,7 @@
     <string name="message_delete_confirm">Are you sure you want to delete?\nRelated diary entries will also be deleted and cannot be recovered.</string>
     <string name="message_not_ready">Coming Soon</string>
     <string name="message_save_failed">Failed to save.</string>
+    <string name="message_picture_add_failed">Could not add the photo. Please try again.</string>
     <string name="exact_alarm_permission_title">Alarm Permission Required</string>
     <string name="exact_alarm_permission_message">Exact alarm permission is required for accurate watering reminders.\nPlease allow it in Settings.</string>
 

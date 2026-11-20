@@ -3,6 +3,7 @@ package com.mskwak.domain.repository
 import com.mskwak.domain.model.Picture
 
 interface PictureRepository {
+    /** 디코딩·파일 저장에 실패하면 예외를 던진다. */
     suspend fun savePicture(bitmap: ByteArray): Picture
     suspend fun deletePicture(picture: Picture)
 

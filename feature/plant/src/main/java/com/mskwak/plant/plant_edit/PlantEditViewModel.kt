@@ -113,11 +113,21 @@ class PlantEditViewModel @AssistedInject constructor(
 
             is PlantEditEvent.OnPictureChanged -> {
                 viewModelScope.launch {
-                    val bytes = readBytesFromUri(application, event.uri) ?: return@launch
+                    val bytes = readBytesFromUri(application, event.uri)
                     cleanupCameraCache(application)
-                    // 이전에 새로 추가한 사진이 있으면 삭제
+                    val picture = try {
+                        bytes?.let { savePictureUseCase(it) }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        null
+                    }
+                    if (picture == null) {
+                        setEffect(PlantEditEffect.ShowSnackbar(R.string.message_picture_add_failed))
+                        return@launch
+                    }
+                    // 저장 실패 시 기존 사진이 남도록 새 사진 저장 후 이전 사진을 지운다.
                     newPicture?.let { deletePictureUseCase(it) }
-                    val picture = savePictureUseCase(bytes)
                     newPicture = picture
                     setState { copy(plantImagePath = picture.path) }
                 }
