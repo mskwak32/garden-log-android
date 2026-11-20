@@ -54,4 +54,7 @@ internal class FileDataSourceImpl @Inject constructor(
             }
         }
     }
+
+    override fun listPictures(dirPath: String): List<File> =
+        File(baseDir, dirPath).listFiles()?.filter { it.isFile } ?: emptyList()
 }

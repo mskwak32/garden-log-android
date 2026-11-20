@@ -21,6 +21,9 @@ interface PictureDao {
     @Query("SELECT * FROM picture WHERE id = :id")
     fun getPictureFlow(id: Int): Flow<PictureEntity?>
 
+    @Query("SELECT * FROM picture")
+    suspend fun getAllPictures(): List<PictureEntity>
+
     @Insert
     suspend fun insertDiaryPictureCrossRef(crossRef: DiaryPictureCrossRef)
 

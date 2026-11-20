@@ -8,6 +8,7 @@ import com.mskwak.domain.usecase.export.DeleteExportedFileUseCase
 import com.mskwak.domain.usecase.export.GenerateExportUseCase
 import com.mskwak.domain.usecase.export.GetExportedFilesUseCase
 import com.mskwak.domain.usecase.picture.DeletePictureUseCase
+import com.mskwak.domain.usecase.picture.DeleteUnusedPicturesUseCase
 import com.mskwak.domain.usecase.picture.SavePictureUseCase
 import com.mskwak.domain.usecase.plant.*
 import com.mskwak.domain.usecase.preference.*
@@ -264,6 +265,13 @@ class UseCaseModule {
         pictureRepository: PictureRepository
     ): DeletePictureUseCase {
         return DeletePictureUseCase(pictureRepository)
+    }
+
+    @Provides
+    fun provideDeleteUnusedPicturesUseCase(
+        pictureRepository: PictureRepository
+    ): DeleteUnusedPicturesUseCase {
+        return DeleteUnusedPicturesUseCase(pictureRepository)
     }
 
     /* Diary UseCases */

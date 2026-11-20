@@ -6,4 +6,5 @@ import java.io.File
 interface FileDataSource {
     fun savePicture(dirPath: String, bitmap: Bitmap): File
     fun deletePicture(path: String)
+    fun listPictures(dirPath: String): List<File>
 }
