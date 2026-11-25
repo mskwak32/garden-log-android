@@ -52,6 +52,10 @@
             android:name=".alarm.PlantTaskAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
+        <receiver
+            android:name=".alarm.NotificationActionReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

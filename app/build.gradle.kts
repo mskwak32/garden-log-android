@@ -114,6 +114,7 @@ dependencies {
     implementation(project(":feature:plant"))
     implementation(project(":feature:setting"))
     implementation(project(":core:common_ui"))
+    implementation(project(":core:analytics"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

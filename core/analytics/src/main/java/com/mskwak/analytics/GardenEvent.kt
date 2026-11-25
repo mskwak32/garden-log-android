@@ -50,4 +50,4 @@ sealed class GardenEvent {
     data class TaskAlarmToggle(val enabled: Boolean) : GardenEvent()
 }
 
-enum class WateringSource { DETAIL, LIST }
+enum class WateringSource { DETAIL, LIST, NOTIFICATION }

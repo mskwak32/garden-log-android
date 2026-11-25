@@ -6,6 +6,9 @@
     <string name="noti_watering_channel_name">물주기 알림</string>
     <string name="noti_task_channel_name">할일 알림</string>
     <string name="noti_task_title">%1$s 할일</string>
+    <string name="noti_action_watering_done">물주기 완료</string>
+    <string name="noti_action_task_done">할일 완료</string>
+    <string name="noti_record_failed">기록하지 못했어요. 눌러서 앱에서 다시 시도해 주세요</string>
     <string name="permission_setting_action">권한 설정</string>
     <string name="message_notification_permission">물주기 알람을 사용하려면 권한이 필요합니다.</string>
     <string name="message_finish_app">종료하려면 한 번 더 눌러주세요.</string>
