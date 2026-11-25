@@ -42,6 +42,12 @@ interface WateringLogDao {
     @Query("DELETE FROM watering_log WHERE plantId = :plantId AND date = :date")
     suspend fun deleteWateringLog(plantId: Int, date: LocalDate)
 
+    @Query("SELECT MIN(date) FROM watering_log WHERE plantId = :plantId")
+    suspend fun getFirstWateringDate(plantId: Int): LocalDate?
+
+    @Query("SELECT MAX(date) FROM watering_log WHERE plantId = :plantId")
+    suspend fun getLastWateringDate(plantId: Int): LocalDate?
+
     @Query("SELECT MAX(date) FROM watering_log WHERE plantId = :plantId AND date < :date")
     suspend fun getLatestWateringDateBefore(plantId: Int, date: LocalDate): LocalDate?
 }

@@ -16,6 +16,9 @@ interface WateringLogRepository {
         endDate: LocalDate
     ): List<LocalDate>
 
+    /** 물주기 기록의 처음·마지막 날짜. 기록이 없으면 null */
+    suspend fun getWateringDateRange(plantId: Int): Pair<LocalDate, LocalDate>?
+
     /**
      * @param plantId null이면 전체 식물
      */

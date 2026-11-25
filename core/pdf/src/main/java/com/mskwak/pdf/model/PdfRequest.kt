@@ -19,10 +19,22 @@ data class PlantDetailPdf(
     val harvestMemo: String? = null
 )
 
+/**
+ * PDF의 하루치 블록. 날짜 줄·물주기·할일은 한 번, 그 아래 entries를 차례로 그린다.
+ */
 data class DiaryPdf(
     val date: LocalDate,
-    val content: String,
-    val imagePaths: List<String>,
+    val entries: List<DiaryEntryPdf> = emptyList(),
     val hasWateringRecord: Boolean = false,
-    val taskTitles: List<String> = emptyList()
+    val tasks: List<TaskPdf> = emptyList()
+)
+
+data class DiaryEntryPdf(
+    val content: String,
+    val imagePaths: List<String>
+)
+
+data class TaskPdf(
+    val title: String,
+    val memo: String? = null
 )

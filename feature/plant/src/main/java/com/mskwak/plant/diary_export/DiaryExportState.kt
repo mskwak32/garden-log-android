@@ -12,7 +12,8 @@ data class DiaryExportState(
     val includeFirstPage: Boolean = true,
     val startDate: LocalDate = LocalDate.now(),
     val endDate: LocalDate = LocalDate.now(),
-    val diaryDateRange: Pair<LocalDate, LocalDate>? = null,
+    // 일기·물주기·할일 전체 기록 범위. 기록이 없으면 null
+    val recordDateRange: Pair<LocalDate, LocalDate>? = null,
     val isExporting: Boolean = false
 ) : ViewState
 
@@ -28,5 +29,5 @@ sealed interface DiaryExportEffect : ViewEffect {
     data object NavigateBack : DiaryExportEffect
     data object ShowExportSuccess : DiaryExportEffect
     data object ShowExportFail : DiaryExportEffect
-    data object ShowNoDiaryInRange : DiaryExportEffect
+    data object ShowNoRecordInRange : DiaryExportEffect
 }

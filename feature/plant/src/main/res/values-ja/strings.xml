@@ -102,7 +102,7 @@
     <string name="diary_export_button">PDFで出力</string>
     <string name="diary_export_success">PDFが保存されました。（Downloads/GardenLog）</string>
     <string name="diary_export_fail">出力に失敗しました。</string>
-    <string name="diary_export_no_diary">選択した日付範囲に日記がありません。</string>
+    <string name="diary_export_no_diary">選択した日付範囲に記録がありません。</string>
     <string name="diary_export_loading">PDF生成中…</string>
     <string name="file_size_mb_format">%.1f MB</string>
     <string name="file_size_kb_format">%d KB</string>

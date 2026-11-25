@@ -70,6 +70,12 @@ internal class WateringLogRepositoryImpl @Inject constructor(
         return wateringLogDao.getWateringDatesByRange(plantId, startDate, endDate)
     }
 
+    override suspend fun getWateringDateRange(plantId: Int): Pair<LocalDate, LocalDate>? {
+        val first = wateringLogDao.getFirstWateringDate(plantId) ?: return null
+        val last = wateringLogDao.getLastWateringDate(plantId) ?: return null
+        return first to last
+    }
+
     override fun observeWateringLogsByRange(
         startDate: LocalDate,
         endDate: LocalDate,

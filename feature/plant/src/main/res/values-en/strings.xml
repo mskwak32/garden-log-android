@@ -102,7 +102,7 @@
     <string name="diary_export_button">Export as PDF</string>
     <string name="diary_export_success">PDF saved. (Downloads/GardenLog)</string>
     <string name="diary_export_fail">Export failed.</string>
-    <string name="diary_export_no_diary">No diary entries in the selected date range.</string>
+    <string name="diary_export_no_diary">No records in the selected date range.</string>
     <string name="diary_export_loading">Generating PDF…</string>
     <string name="file_size_mb_format">%.1f MB</string>
     <string name="file_size_kb_format">%d KB</string>

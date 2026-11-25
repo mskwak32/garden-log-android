@@ -3,15 +3,12 @@ package com.mskwak.plant.diary_export
 import androidx.lifecycle.viewModelScope
 import com.mskwak.common_ui.ViewEvent
 import com.mskwak.common_ui.base.BaseViewModel
-import com.mskwak.domain.model.DiaryExport
 import com.mskwak.domain.model.ExportRequest
 import com.mskwak.domain.model.PlantDetailExport
-import com.mskwak.domain.usecase.diary.GetDiariesForExportUseCase
-import com.mskwak.domain.usecase.diary.GetDiaryDateRangeUseCase
 import com.mskwak.domain.usecase.export.GenerateExportUseCase
+import com.mskwak.domain.usecase.export.GetDiaryExportDaysUseCase
+import com.mskwak.domain.usecase.export.GetExportDateRangeUseCase
 import com.mskwak.domain.usecase.plant.GetPlantUseCase
-import com.mskwak.domain.usecase.task.GetPlantTaskLogsByRangeUseCase
-import com.mskwak.domain.usecase.watering.GetWateringDatesForExportUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -25,10 +22,8 @@ import timber.log.Timber
 class DiaryExportViewModel @AssistedInject constructor(
     @Assisted navKey: DiaryExportNavKey,
     private val getPlantUseCase: GetPlantUseCase,
-    private val getDiaryDateRangeUseCase: GetDiaryDateRangeUseCase,
-    private val getDiariesForExportUseCase: GetDiariesForExportUseCase,
-    private val getWateringDatesForExportUseCase: GetWateringDatesForExportUseCase,
-    private val getPlantTaskLogsByRangeUseCase: GetPlantTaskLogsByRangeUseCase,
+    private val getExportDateRangeUseCase: GetExportDateRangeUseCase,
+    private val getDiaryExportDaysUseCase: GetDiaryExportDaysUseCase,
     private val generateExportUseCase: GenerateExportUseCase
 ) : BaseViewModel<DiaryExportState, DiaryExportEvent, DiaryExportEffect>() {
 
@@ -43,12 +38,13 @@ class DiaryExportViewModel @AssistedInject constructor(
     private fun loadInitialData() {
         viewModelScope.launch {
             val plant = getPlantUseCase(plantId).filterNotNull().first()
-            val dateRange = getDiaryDateRangeUseCase(plantId)
+            // 일기·물주기·할일 전체 기록 범위
+            val dateRange = getExportDateRangeUseCase(plantId)
 
             setState {
                 copy(
                     plantName = plant.name,
-                    diaryDateRange = dateRange,
+                    recordDateRange = dateRange,
                     startDate = dateRange?.first ?: plant.createdDate,
                     endDate = dateRange?.second ?: plant.createdDate
                 )
@@ -88,21 +84,15 @@ class DiaryExportViewModel @AssistedInject constructor(
             setState { copy(isExporting = true) }
 
             try {
-                val diaries = getDiariesForExportUseCase(plantId, state.startDate, state.endDate)
+                val days = getDiaryExportDaysUseCase(plantId, state.startDate, state.endDate)
 
-                if (diaries.isEmpty()) {
+                if (days.isEmpty()) {
                     setState { copy(isExporting = false) }
-                    setEffect(DiaryExportEffect.ShowNoDiaryInRange)
+                    setEffect(DiaryExportEffect.ShowNoRecordInRange)
                     return@launch
                 }
 
                 val plant = getPlantUseCase(plantId).filterNotNull().first()
-                val wateringDates =
-                    getWateringDatesForExportUseCase(plantId, state.startDate, state.endDate)
-
-                val taskTitlesByDate = getPlantTaskLogsByRangeUseCase(
-                    plantId, state.startDate, state.endDate
-                ).groupBy({ it.date }, { it.title })
 
                 val plantDetail = if (state.includeFirstPage) {
                     PlantDetailExport(
@@ -120,15 +110,7 @@ class DiaryExportViewModel @AssistedInject constructor(
                     plantName = plant.name,
                     includeFirstPage = state.includeFirstPage,
                     plantDetail = plantDetail,
-                    diaries = diaries.map { diary ->
-                        DiaryExport(
-                            date = diary.createdDate,
-                            content = diary.memo,
-                            imagePaths = diary.pictureList?.map { it.path } ?: emptyList(),
-                            hasWateringRecord = diary.createdDate in wateringDates,
-                            taskTitles = taskTitlesByDate[diary.createdDate].orEmpty()
-                        )
-                    }
+                    diaries = days
                 )
 
                 generateExportUseCase(request)

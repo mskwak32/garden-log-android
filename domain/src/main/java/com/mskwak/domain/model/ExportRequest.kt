@@ -19,10 +19,22 @@ data class PlantDetailExport(
     val harvestMemo: String? = null
 )
 
+/**
+ * 내보내기의 하루치 기록. entries·hasWateringRecord·tasks 중 최소 하나는 비어 있지 않다.
+ */
 data class DiaryExport(
     val date: LocalDate,
-    val content: String,
-    val imagePaths: List<String>,
+    val entries: List<DiaryEntryExport> = emptyList(),
     val hasWateringRecord: Boolean = false,
-    val taskTitles: List<String> = emptyList()
+    val tasks: List<TaskExport> = emptyList()
+)
+
+data class DiaryEntryExport(
+    val content: String,
+    val imagePaths: List<String>
+)
+
+data class TaskExport(
+    val title: String,
+    val memo: String? = null
 )

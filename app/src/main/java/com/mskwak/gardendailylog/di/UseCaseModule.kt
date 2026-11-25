@@ -6,6 +6,8 @@ import com.mskwak.domain.usecase.config.IsFeedbackVisibleUseCase
 import com.mskwak.domain.usecase.diary.*
 import com.mskwak.domain.usecase.export.DeleteExportedFileUseCase
 import com.mskwak.domain.usecase.export.GenerateExportUseCase
+import com.mskwak.domain.usecase.export.GetDiaryExportDaysUseCase
+import com.mskwak.domain.usecase.export.GetExportDateRangeUseCase
 import com.mskwak.domain.usecase.export.GetExportedFilesUseCase
 import com.mskwak.domain.usecase.picture.DeletePictureUseCase
 import com.mskwak.domain.usecase.picture.DeleteUnusedPicturesUseCase
@@ -67,13 +69,6 @@ class UseCaseModule {
         wateringLogRepository: WateringLogRepository
     ): GetWateringLogExistsUseCase {
         return GetWateringLogExistsUseCase(wateringLogRepository)
-    }
-
-    @Provides
-    fun provideGetWateringDatesForExportUseCase(
-        wateringLogRepository: WateringLogRepository
-    ): GetWateringDatesForExportUseCase {
-        return GetWateringDatesForExportUseCase(wateringLogRepository)
     }
 
     @Provides
@@ -327,21 +322,25 @@ class UseCaseModule {
         return UpdateDiaryUseCase(diaryRepository)
     }
 
-    @Provides
-    fun provideGetDiaryDateRangeUseCase(
-        diaryRepository: DiaryRepository
-    ): GetDiaryDateRangeUseCase {
-        return GetDiaryDateRangeUseCase(diaryRepository)
-    }
-
-    @Provides
-    fun provideGetDiariesForExportUseCase(
-        diaryRepository: DiaryRepository
-    ): GetDiariesForExportUseCase {
-        return GetDiariesForExportUseCase(diaryRepository)
-    }
-
     /* Export UseCases */
+    @Provides
+    fun provideGetDiaryExportDaysUseCase(
+        diaryRepository: DiaryRepository,
+        wateringLogRepository: WateringLogRepository,
+        plantTaskRepository: PlantTaskRepository
+    ): GetDiaryExportDaysUseCase {
+        return GetDiaryExportDaysUseCase(diaryRepository, wateringLogRepository, plantTaskRepository)
+    }
+
+    @Provides
+    fun provideGetExportDateRangeUseCase(
+        diaryRepository: DiaryRepository,
+        wateringLogRepository: WateringLogRepository,
+        plantTaskRepository: PlantTaskRepository
+    ): GetExportDateRangeUseCase {
+        return GetExportDateRangeUseCase(diaryRepository, wateringLogRepository, plantTaskRepository)
+    }
+
     @Provides
     fun provideGenerateExportUseCase(exportRepository: ExportRepository): GenerateExportUseCase {
         return GenerateExportUseCase(exportRepository)

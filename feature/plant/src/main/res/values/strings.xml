@@ -102,7 +102,7 @@
     <string name="diary_export_button">PDF로 내보내기</string>
     <string name="diary_export_success">PDF가 저장되었습니다. (Downloads/GardenLog)</string>
     <string name="diary_export_fail">내보내기에 실패했습니다.</string>
-    <string name="diary_export_no_diary">선택한 날짜 범위에 일기가 없습니다.</string>
+    <string name="diary_export_no_diary">선택한 날짜 범위에 기록이 없습니다.</string>
     <string name="diary_export_loading">PDF 생성 중…</string>
     <string name="file_size_mb_format">%.1f MB</string>
     <string name="file_size_kb_format">%d KB</string>

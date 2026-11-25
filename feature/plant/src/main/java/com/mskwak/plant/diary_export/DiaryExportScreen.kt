@@ -52,7 +52,7 @@ fun DiaryExportScreen(
                     snackbarHostState.showSnackbar(failMessage)
                 }
 
-                is DiaryExportEffect.ShowNoDiaryInRange -> {
+                is DiaryExportEffect.ShowNoRecordInRange -> {
                     snackbarHostState.showSnackbar(noDiaryMessage)
                 }
             }
@@ -104,8 +104,8 @@ private fun Content(
                 HorizontalDivider()
                 Spacer(Modifier.height(24.dp))
 
-                // 날짜 범위 선택 (일기가 있는 경우에만 활성화)
-                state.diaryDateRange?.let { dateRange ->
+                // 날짜 범위 선택 (기록이 있는 경우에만 활성화)
+                state.recordDateRange?.let { dateRange ->
                     DateRangeSection(
                         state = state,
                         dateRange = dateRange,
@@ -203,7 +203,7 @@ private fun DiaryExportScreenPreview() {
         Content(
             state = DiaryExportState(
                 plantName = "토마토",
-                diaryDateRange = LocalDate.of(2024, 1, 1) to LocalDate.of(2024, 12, 31),
+                recordDateRange = LocalDate.of(2024, 1, 1) to LocalDate.of(2024, 12, 31),
                 startDate = LocalDate.of(2024, 1, 1),
                 endDate = LocalDate.of(2024, 12, 31)
             ),

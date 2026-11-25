@@ -90,6 +90,12 @@ interface PlantTaskDao {
         endDate: LocalDate
     ): List<PlantTaskLogEntity>
 
+    @Query("SELECT MIN(date) FROM plant_task_log WHERE plantId = :plantId")
+    suspend fun getFirstTaskLogDate(plantId: Int): LocalDate?
+
+    @Query("SELECT MAX(date) FROM plant_task_log WHERE plantId = :plantId")
+    suspend fun getLastTaskLogDate(plantId: Int): LocalDate?
+
     // plantId가 null이면 전체 식물
     @Query("SELECT * FROM plant_task_log WHERE date BETWEEN :startDate AND :endDate AND (:plantId IS NULL OR plantId = :plantId) ORDER BY date, id")
     fun observeTaskLogsByRange(

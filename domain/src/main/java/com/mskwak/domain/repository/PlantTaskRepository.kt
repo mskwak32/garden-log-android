@@ -38,6 +38,9 @@ interface PlantTaskRepository {
         endDate: LocalDate
     ): List<PlantTaskLog>
 
+    /** 할일 완료 기록의 처음·마지막 날짜. 기록이 없으면 null */
+    suspend fun getTaskLogDateRange(plantId: Int): Pair<LocalDate, LocalDate>?
+
     /**
      * @param plantId null이면 전체 식물
      */

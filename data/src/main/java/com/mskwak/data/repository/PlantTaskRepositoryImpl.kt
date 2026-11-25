@@ -99,6 +99,12 @@ internal class PlantTaskRepositoryImpl @Inject constructor(
     ): List<PlantTaskLog> =
         plantTaskDao.getPlantTaskLogsByRange(plantId, startDate, endDate).map { it.toPlantTaskLog() }
 
+    override suspend fun getTaskLogDateRange(plantId: Int): Pair<LocalDate, LocalDate>? {
+        val first = plantTaskDao.getFirstTaskLogDate(plantId) ?: return null
+        val last = plantTaskDao.getLastTaskLogDate(plantId) ?: return null
+        return first to last
+    }
+
     override fun observeTaskLogsByRange(
         startDate: LocalDate,
         endDate: LocalDate,
