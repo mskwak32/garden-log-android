@@ -116,12 +116,10 @@ fun MainScreen(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator()
                 ),
-                predictivePopTransitionSpec = {
-                    ContentTransform(
-                        targetContentEnter = fadeIn(animationSpec = tween(700)),
-                        initialContentExit = fadeOut(animationSpec = tween(700)),
-                    )
-                }
+                // 기본 페이드(700ms)는 길어서 짧게 줄임
+                transitionSpec = { shortFade() },
+                popTransitionSpec = { shortFade() },
+                predictivePopTransitionSpec = { shortFade() }
             )
 
             // Snackbar: NavigationBar 위에 표시
@@ -274,3 +272,10 @@ private fun BackPressFinish(
         }
     }
 }
+
+private const val SCREEN_TRANSITION_MILLIS = 500
+
+private fun shortFade(): ContentTransform = ContentTransform(
+    targetContentEnter = fadeIn(animationSpec = tween(SCREEN_TRANSITION_MILLIS)),
+    initialContentExit = fadeOut(animationSpec = tween(SCREEN_TRANSITION_MILLIS))
+)
